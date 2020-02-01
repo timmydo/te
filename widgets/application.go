@@ -1,5 +1,7 @@
 package widgets
 
+import "log"
+
 var (
 	ApplicationInstance Application
 )
@@ -13,15 +15,16 @@ type Application struct {
 	Windows []*Window
 }
 
-func (app *Application) CreateWindow(name string, handle interface{}) *Window {
-	w := &Window{name, handle}
+func (app *Application) CreateWindow(name string) *Window {
+	w := &Window{name}
 	app.Windows = append(app.Windows, w)
+	log.Printf("Created window %s\n", name)
 	return w
 }
 
-func (app *Application) FindWindow(handle interface{}) *Window {
+func (app *Application) FindWindow(handle *Window) *Window {
 	for _, element := range app.Windows {
-		if element.Handle == handle {
+		if element == handle {
 			return element
 		}
 	}
@@ -34,9 +37,10 @@ func remove(s []interface{}, i int) []interface{} {
 	return s[:len(s)-1]
 }
 
-func (app *Application) KillWindow(handle interface{}) {
+func (app *Application) KillWindow(teW *Window) {
+	log.Printf("Destroy window %s\n", teW.name)
 	for i, element := range app.Windows {
-		if element.Handle == handle {
+		if element == teW {
 			app.Windows[i] = app.Windows[len(app.Windows)-1]
 			app.Windows = app.Windows[:len(app.Windows)-1]
 		}

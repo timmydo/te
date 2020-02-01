@@ -5,8 +5,7 @@ import (
 )
 
 type Window struct {
-	name   string
-	Handle interface{}
+	name string
 }
 
 func (app *Window) HandleKeyPress(kp *input.KeyPressInfo) bool {

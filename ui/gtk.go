@@ -21,18 +21,23 @@ func init() {
 
 }
 
-func draw(da *gtk.DrawingArea, cr *cairo.Context) {
+func draw(teW *widgets.Window, da *gtk.DrawingArea, cr *cairo.Context) {
 	cr.SetSourceRGB(0, 0, 0)
-	cr.Rectangle(10, 20, 30, 40)
-	cr.Fill()
+	cr.MoveTo(30, 30)
+	target := cr.GetTarget()
+	height := target.GetHeight()
+	width := target.GetWidth()
+	log.Printf("%v %d x %d\n", teW, width, height)
+	cr.ShowText("hello")
+	//	cr.Fill()
 }
 
-func keyPressEvent(win *gtk.Window, ev *gdk.Event) {
+func keyPressEvent(teW *widgets.Window, win *gtk.Window, ev *gdk.Event) {
 	keyEvent := &gdk.EventKey{ev}
 	// fixme lookup key
 	item, found := keyMap[keyEvent.KeyVal()]
 	if found {
-		teWindow := widgets.ApplicationInstance.FindWindow(win)
+		teWindow := widgets.ApplicationInstance.FindWindow(teW)
 		log.Println("Handle keypress %v\n", item)
 		teWindow.HandleKeyPress(item)
 		win.QueueDraw()
@@ -45,7 +50,7 @@ func keyPressEvent(win *gtk.Window, ev *gdk.Event) {
 func setupWindow(teW *widgets.Window, win *gtk.Window) {
 	win.SetTitle("TE")
 	win.Connect("destroy", func() {
-		widgets.ApplicationInstance.KillWindow(win)
+		widgets.ApplicationInstance.KillWindow(teW)
 		if len(widgets.ApplicationInstance.Windows) == 0 {
 			gtk.MainQuit()
 		}
@@ -57,8 +62,8 @@ func setupWindow(teW *widgets.Window, win *gtk.Window) {
 		log.Fatal("Unable to create drawing area:", err)
 	}
 
-	da.Connect("draw", draw)
-	win.Connect("key-press-event", keyPressEvent)
+	da.Connect("draw", func(da *gtk.DrawingArea, cr *cairo.Context) { draw(teW, da, cr) })
+	win.Connect("key-press-event", func(win *gtk.Window, ev *gdk.Event) { keyPressEvent(teW, win, ev) })
 
 	// Add the label to the window.
 	win.Add(da)
@@ -81,7 +86,7 @@ func Start() {
 		log.Fatal("Unable to create window:", err)
 	}
 
-	teWindow := widgets.ApplicationInstance.CreateWindow("te", win)
+	teWindow := widgets.ApplicationInstance.CreateWindow("te")
 	setupWindow(teWindow, win)
 
 	// Begin executing the GTK main loop.  This blocks until
