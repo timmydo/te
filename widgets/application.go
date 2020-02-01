@@ -16,7 +16,7 @@ type Application struct {
 }
 
 func (app *Application) CreateWindow(name string) *Window {
-	w := &Window{name}
+	w := NewWindow(name)
 	app.Windows = append(app.Windows, w)
 	log.Printf("Created window %s\n", name)
 	return w

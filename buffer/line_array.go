@@ -2,9 +2,9 @@ package buffer
 
 import (
 	"bufio"
+	"bytes"
 	"io"
 	"unicode/utf8"
-
 )
 
 func runeToByteIndex(n int, txt []byte) int {
@@ -32,12 +32,11 @@ type Line struct {
 	data []byte
 }
 
-
 // A LineArray simply stores and array of lines and makes it easy to insert
 // and delete in it
 type LineArray struct {
 	lines    []Line
-	Endings  string
+	Endings  []byte
 	initsize uint64
 }
 
@@ -59,7 +58,7 @@ func Append(slice []Line, data ...Line) []Line {
 }
 
 // NewLineArray returns a new line array from an array of bytes
-func NewLineArray(size uint64, endings FileFormat, reader io.Reader) *LineArray {
+func NewLineArray(size uint64, reader io.Reader) *LineArray {
 	la := new(LineArray)
 
 	la.lines = make([]Line, 0, 1000)
@@ -78,10 +77,10 @@ func NewLineArray(size uint64, endings FileFormat, reader io.Reader) *LineArray 
 		dlen := len(data)
 		if dlen > 1 && data[dlen-2] == '\r' {
 			data = append(data[:dlen-2], '\n')
-			la.Endings = "\r\n"
+			la.Endings = []byte("\r\n")
 			dlen = len(data)
 		} else if dlen > 0 {
-			la.Endings = "\n"
+			la.Endings = []byte("\n")
 		}
 
 		// If we are loading a large file (greater than 1000) we use the file
@@ -120,14 +119,14 @@ func NewLineArray(size uint64, endings FileFormat, reader io.Reader) *LineArray 
 // Bytes returns the string that should be written to disk when
 // the line array is saved
 func (la *LineArray) Bytes() []byte {
-	str := make([]byte, 0, la.initsize+1000) // initsize should provide a good estimate
+	buf := bytes.NewBuffer([]byte{})
 	for i, l := range la.lines {
-		str = append(str, l.data...)
+		buf.Write(l.data)
 		if i != len(la.lines)-1 {
-			str = append(str, la.Endings)
+			buf.Write(la.Endings)
 		}
 	}
-	return str
+	return buf.Bytes()
 }
 
 // newlineBelow adds a newline below the given line number
@@ -169,11 +168,6 @@ func (la *LineArray) joinLines(a, b int) {
 func (la *LineArray) split(pos Loc) {
 	la.newlineBelow(pos.Y)
 	la.insert(Loc{0, pos.Y + 1}, la.lines[pos.Y].data[pos.X:])
-	la.lines[pos.Y+1].state = la.lines[pos.Y].state
-	la.lines[pos.Y].state = nil
-	la.lines[pos.Y].match = nil
-	la.lines[pos.Y+1].match = nil
-	la.lines[pos.Y].rehighlight = true
 	la.deleteToEnd(Loc{pos.X, pos.Y})
 }
 
@@ -258,12 +252,4 @@ func (la *LineArray) LineBytes(n int) []byte {
 		return []byte{}
 	}
 	return la.lines[n].data
-}
-
-func (la *LineArray) Rehighlight(lineN int) bool {
-	return la.lines[lineN].rehighlight
-}
-
-func (la *LineArray) SetRehighlight(lineN int, on bool) {
-	la.lines[lineN].rehighlight = on
 }
