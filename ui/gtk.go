@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"unicode/utf8"
 
 	"github.com/timmydo/te/buffer"
 	"github.com/timmydo/te/input"
+	"github.com/timmydo/te/theme"
 	"github.com/timmydo/te/widgets"
 
 	"github.com/gotk3/gotk3/cairo"
@@ -24,52 +26,76 @@ func init() {
 
 }
 
+func setColor(cr *cairo.Context, c theme.Color) {
+	cr.SetSourceRGBA(c.R, c.G, c.B, c.A)
+}
+
 func drawPanel(win *widgets.Window, cr *cairo.Context, x, y, width, height float64) {
-	cr.SetSourceRGB(.7, .7, .7)
+	setColor(cr, theme.LeftPanelBackgroundColor)
 	cr.Rectangle(0, 0, width, height)
 	cr.Fill()
 }
 
+func getLineToPrint(lineBytes []byte, runesPrinted int, runesOnLine int) string {
+	byteOffset := buffer.RuneToByteIndex(runesPrinted, lineBytes)
+	byteEnd := buffer.RuneToByteIndex(runesPrinted + runesOnLine, lineBytes)
+	return string(lineBytes[byteOffset:byteEnd])
+}
+
 func drawEditors(win *widgets.Window, cr *cairo.Context, x, y, width, height float64) {
-	cr.SelectFontFace("DejaVuSansMono", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+	cr.SelectFontFace("monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
 	fontSize := 14.0
 	cr.SetFontSize(fontSize)
-	cr.SetSourceRGB(0, 0, 0)
 	log.Printf("drawEditors %v\n", win.OpenBuffer)
 	if win.OpenBuffer != nil {
 
 		loc := win.OpenBuffer.GetScrollPosition()
 		lines := win.OpenBuffer.Data.Contents
 		ypos := y + fontSize
-		line, col := loc.Y, loc.X
+		line := loc.Y
 		lineEnd := lines.End().Y
 
-		lineNumberExtents := cr.TextExtents(fmt.Sprintf(" %d:", (line+1)*10))
+		lineNumberExtents := cr.TextExtents(fmt.Sprintf(" %d", (line+1)*10))
 		characterExtents := cr.TextExtents("X")
 		point := win.OpenBuffer.Point
 
+		setColor(cr, theme.LineNumberBackgroundColor)
+		cr.Rectangle(x, y, lineNumberExtents.XAdvance, height)
+		cr.Fill()
+		log.Printf("fill: %v %v %v %v\n", x, y, x+lineNumberExtents.XAdvance, height)
+		log.Printf("lne: %v\n", lineNumberExtents)
+		runeWidth := characterExtents.XAdvance
+		runeHeight := fontSize
+		textOffsetFromLineNumberColumn := runeWidth
+		textStartX := x + lineNumberExtents.XAdvance + textOffsetFromLineNumberColumn
+		runesPerLine := int((width - x) / runeWidth)
 		for ypos < height && line < lineEnd {
-
 			lineBytes := lines.LineBytes(line)
-			startOffset := buffer.RuneToByteIndex(col, lineBytes)
-			log.Printf("@ (%v, %v) +%d: %s\n", x, ypos, startOffset, string(lineBytes))
-			if startOffset < len(lineBytes) {
-				// print line number
-				cr.MoveTo(x, ypos)
-				cr.ShowText(fmt.Sprintf(" %d:", line+1))
 
+			// print line number
+			cr.MoveTo(x, ypos)
+			setColor(cr, theme.LineNumberFontColor)
+			cr.ShowText(fmt.Sprintf(" %d", line+1))
+			runesOnLine := utf8.RuneCount(lineBytes)
+			for runesPrinted := 0; runesPrinted < runesOnLine; runesPrinted += runesPerLine {
+				log.Printf("@ (%v, %v) +%d: %s\n", x, ypos, runesPrinted, string(lineBytes))
 				// print text on line
-				cr.MoveTo(x+lineNumberExtents.XAdvance, ypos)
-				cr.ShowText(string(lineBytes[startOffset:]))
+				cr.MoveTo(textStartX, ypos)
+				setColor(cr, theme.PrimaryFontColor)
+				cr.ShowText(getLineToPrint(lineBytes, runesPrinted, runesOnLine))
+
+				// print cursor
+				if line == point.Y && point.X >= runesPrinted && point.X < runesOnLine {
+					setColor(cr, theme.CursorColor)
+					log.Printf("cursor %v %v %v %v\n", textStartX+(float64(point.X-runesPrinted)*runeWidth), ypos, runeWidth, runeHeight)
+					cr.Rectangle(textStartX+(float64(point.X-runesPrinted)*runeWidth), ypos, runeWidth, runeHeight)
+					cr.Fill()
+					setColor(cr, theme.PrimaryFontColor)
+				}
+
+				ypos += fontSize
 			}
 
-			// print cursor
-			if line == point.Y {
-				cr.MoveTo(x+(float64(point.X)*characterExtents.XAdvance), ypos+5)
-				cr.ShowText("_")
-			}
-
-			ypos += fontSize
 			line++
 
 		}
