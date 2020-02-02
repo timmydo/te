@@ -1,7 +1,7 @@
 package buffer
 
 import (
-	"errors"
+	"log"
 	"strings"
 	"time"
 )
@@ -11,9 +11,10 @@ var (
 )
 
 type Buffer struct {
-	Data  *BufferData
-	Point *Loc
-	Mark  *Loc
+	Data           *BufferData
+	Point          *Loc
+	Mark           *Loc
+	scrollPosition *Loc
 }
 
 type BufferData struct {
@@ -25,28 +26,39 @@ type BufferData struct {
 }
 
 func GetScratchBuffer() *Buffer {
-	if sb, err := findScratchBuffer(); err != nil {
+	if sb := findScratchBuffer(); sb != nil {
 		return sb
 	}
 
 	sb := newScratchBuffer()
+
 	OpenBuffers = append(OpenBuffers, sb)
+	log.Printf("OpenBuffers: %v\n", OpenBuffers)
 	return sb
 }
 
-func findScratchBuffer() (*Buffer, error) {
+func findScratchBuffer() *Buffer {
 	for _, b := range OpenBuffers {
 		if b.Data.Filename == "*scratch*" {
-			return b, nil
+			return b
 		}
 	}
 
-	return nil, errors.New("scratch not found")
+	return nil
 }
 
 func newScratchBuffer() *Buffer {
-	la := NewLineArray(100, strings.NewReader("*scratch*\nhello world\n"))
+	la := NewLineArray(100, strings.NewReader("*scratch*\nhello world\nthis is a temp buffer\n"))
 	bd := &BufferData{time.Now(), false, false, "*scratch*", la}
-	b := &Buffer{bd, &Loc{0, 0}, nil}
+	b := &Buffer{bd, &Loc{0, 0}, nil, &Loc{0, 0}}
+	log.Printf("New scratch buffer: %v", b)
 	return b
+}
+
+func (b *Buffer) GetScrollPosition() *Loc {
+	if b.scrollPosition == nil {
+		b.scrollPosition = &Loc{}
+	}
+
+	return b.scrollPosition
 }

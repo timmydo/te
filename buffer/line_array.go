@@ -7,7 +7,7 @@ import (
 	"unicode/utf8"
 )
 
-func runeToByteIndex(n int, txt []byte) int {
+func RuneToByteIndex(n int, txt []byte) int {
 	if n == 0 {
 		return 0
 	}
@@ -138,7 +138,7 @@ func (la *LineArray) newlineBelow(y int) {
 
 // Inserts a byte array at a given location
 func (la *LineArray) insert(pos Loc, value []byte) {
-	x, y := runeToByteIndex(pos.X, la.lines[pos.Y].data), pos.Y
+	x, y := RuneToByteIndex(pos.X, la.lines[pos.Y].data), pos.Y
 	for i := 0; i < len(value); i++ {
 		if value[i] == '\n' {
 			la.split(Loc{x, y})
@@ -174,8 +174,8 @@ func (la *LineArray) split(pos Loc) {
 // removes from start to end
 func (la *LineArray) remove(start, end Loc) []byte {
 	sub := la.Substr(start, end)
-	startX := runeToByteIndex(start.X, la.lines[start.Y].data)
-	endX := runeToByteIndex(end.X, la.lines[end.Y].data)
+	startX := RuneToByteIndex(start.X, la.lines[start.Y].data)
+	endX := RuneToByteIndex(end.X, la.lines[end.Y].data)
 	if start.Y == end.Y {
 		la.lines[start.Y].data = append(la.lines[start.Y].data[:startX], la.lines[start.Y].data[endX:]...)
 	} else {
@@ -211,8 +211,8 @@ func (la *LineArray) deleteByte(pos Loc) {
 
 // Substr returns the string representation between two locations
 func (la *LineArray) Substr(start, end Loc) []byte {
-	startX := runeToByteIndex(start.X, la.lines[start.Y].data)
-	endX := runeToByteIndex(end.X, la.lines[end.Y].data)
+	startX := RuneToByteIndex(start.X, la.lines[start.Y].data)
+	endX := RuneToByteIndex(end.X, la.lines[end.Y].data)
 	if start.Y == end.Y {
 		src := la.lines[start.Y].data[startX:endX]
 		dest := make([]byte, len(src))

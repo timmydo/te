@@ -1,9 +1,11 @@
 package ui
 
 import (
+	"fmt"
 	"log"
 	"os"
 
+	"github.com/timmydo/te/buffer"
 	"github.com/timmydo/te/input"
 	"github.com/timmydo/te/widgets"
 
@@ -22,20 +24,56 @@ func init() {
 
 }
 
-func draw(win *widgets.Window, da *gtk.DrawingArea, cr *cairo.Context) {
+func drawPanel(win *widgets.Window, cr *cairo.Context, x, y, width, height float64) {
 	cr.SetSourceRGB(.7, .7, .7)
+	cr.Rectangle(0, 0, width, height)
+	cr.Fill()
+}
+
+func drawEditors(win *widgets.Window, cr *cairo.Context, x, y, width, height float64) {
+	cr.SelectFontFace("DejaVuSansMono", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+	fontSize := 14.0
+	cr.SetFontSize(fontSize)
+	cr.SetSourceRGB(0, 0, 0)
+	log.Printf("drawEditors %v\n", win.OpenBuffer)
+	if win.OpenBuffer != nil {
+
+		loc := win.OpenBuffer.GetScrollPosition()
+		lines := win.OpenBuffer.Data.Contents
+		ypos := y + fontSize
+		line, col := loc.Y, loc.X
+		lineEnd := lines.End().Y
+
+		lineNumberExtents := cr.TextExtents(fmt.Sprintf(" %d:", (line+1)*10))
+
+		for ypos < height && line < lineEnd {
+
+			lineBytes := lines.LineBytes(line)
+			startOffset := buffer.RuneToByteIndex(col, lineBytes)
+			log.Printf("@ (%v, %v) +%d: %s\n", x, ypos, startOffset, string(lineBytes))
+			if startOffset < len(lineBytes) {
+				cr.MoveTo(x, ypos)
+				cr.ShowText(fmt.Sprintf(" %d:", line+1))
+				cr.MoveTo(x+lineNumberExtents.XAdvance, ypos)
+				cr.ShowText(string(lineBytes[startOffset:]))
+			}
+			ypos += fontSize
+			line++
+
+		}
+	}
+}
+
+func draw(win *widgets.Window, da *gtk.DrawingArea, cr *cairo.Context) {
 	target := cr.GetTarget()
 	height := float64(target.GetHeight())
 	width := float64(target.GetWidth())
 	leftCol := width * win.LeftPanelWidthPercent / 100.0
-	cr.Rectangle(0, 0, leftCol, height)
-	cr.Fill()
 
-	log.Printf("%v %v x %v\n", win, width, height)
+	log.Printf("draw(%v) size %v x %v\n", win, width, height)
 
-	cr.SetSourceRGB(0, 0, 0)
-	cr.MoveTo(leftCol, 10)
-	cr.ShowText("hello")
+	drawPanel(win, cr, 0, 0, leftCol, height)
+	drawEditors(win, cr, leftCol, 0, width, height)
 }
 
 func keyPressEvent(teW *widgets.Window, win *gtk.Window, ev *gdk.Event) {
