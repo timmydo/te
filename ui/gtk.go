@@ -22,15 +22,20 @@ func init() {
 
 }
 
-func draw(teW *widgets.Window, da *gtk.DrawingArea, cr *cairo.Context) {
-	cr.SetSourceRGB(0, 0, 0)
-	cr.MoveTo(30, 30)
+func draw(win *widgets.Window, da *gtk.DrawingArea, cr *cairo.Context) {
+	cr.SetSourceRGB(.7, .7, .7)
 	target := cr.GetTarget()
-	height := target.GetHeight()
-	width := target.GetWidth()
-	log.Printf("%v %d x %d\n", teW, width, height)
+	height := float64(target.GetHeight())
+	width := float64(target.GetWidth())
+	leftCol := width * win.LeftPanelWidthPercent / 100.0
+	cr.Rectangle(0, 0, leftCol, height)
+	cr.Fill()
+
+	log.Printf("%v %v x %v\n", win, width, height)
+
+	cr.SetSourceRGB(0, 0, 0)
+	cr.MoveTo(leftCol, 10)
 	cr.ShowText("hello")
-	//	cr.Fill()
 }
 
 func keyPressEvent(teW *widgets.Window, win *gtk.Window, ev *gdk.Event) {
@@ -85,8 +90,11 @@ func Start() {
 	if err != nil {
 		log.Fatal("Unable to create window:", err)
 	}
-
-	teWindow := widgets.ApplicationInstance.CreateWindow("te", os.Getwd())
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatal("Unable to get working directory:", err)
+	}
+	teWindow := widgets.ApplicationInstance.CreateWindow("te", cwd)
 	setupWindow(teWindow, win)
 
 	// Begin executing the GTK main loop.  This blocks until
