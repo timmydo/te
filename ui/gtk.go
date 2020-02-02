@@ -45,6 +45,8 @@ func drawEditors(win *widgets.Window, cr *cairo.Context, x, y, width, height flo
 		lineEnd := lines.End().Y
 
 		lineNumberExtents := cr.TextExtents(fmt.Sprintf(" %d:", (line+1)*10))
+		characterExtents := cr.TextExtents("X")
+		point := win.OpenBuffer.Point
 
 		for ypos < height && line < lineEnd {
 
@@ -52,11 +54,21 @@ func drawEditors(win *widgets.Window, cr *cairo.Context, x, y, width, height flo
 			startOffset := buffer.RuneToByteIndex(col, lineBytes)
 			log.Printf("@ (%v, %v) +%d: %s\n", x, ypos, startOffset, string(lineBytes))
 			if startOffset < len(lineBytes) {
+				// print line number
 				cr.MoveTo(x, ypos)
 				cr.ShowText(fmt.Sprintf(" %d:", line+1))
+
+				// print text on line
 				cr.MoveTo(x+lineNumberExtents.XAdvance, ypos)
 				cr.ShowText(string(lineBytes[startOffset:]))
 			}
+
+			// print cursor
+			if line == point.Y {
+				cr.MoveTo(x+(float64(point.X)*characterExtents.XAdvance), ypos+5)
+				cr.ShowText("_")
+			}
+
 			ypos += fontSize
 			line++
 
