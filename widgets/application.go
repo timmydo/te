@@ -15,8 +15,8 @@ type Application struct {
 	Windows []*Window
 }
 
-func (app *Application) CreateWindow(name string) *Window {
-	w := NewWindow(name)
+func (app *Application) CreateWindow(name string, rootDirectory string) *Window {
+	w := NewWindow(name, rootDirectory)
 	app.Windows = append(app.Windows, w)
 	log.Printf("Created window %s\n", name)
 	return w

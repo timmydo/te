@@ -6,12 +6,13 @@ import (
 )
 
 type Window struct {
-	name       string
-	OpenBuffer *buffer.Buffer
+	name          string
+	rootDirectory string
+	OpenBuffer    *buffer.Buffer
 }
 
-func NewWindow(name string) *Window {
-	w := &Window{name, buffer.GetScratchBuffer()}
+func NewWindow(name string, rootDirectory string) *Window {
+	w := &Window{name, rootDirectory, buffer.GetScratchBuffer()}
 	return w
 }
 

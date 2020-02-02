@@ -2,6 +2,7 @@ package ui
 
 import (
 	"log"
+	"os"
 
 	"github.com/timmydo/te/input"
 	"github.com/timmydo/te/widgets"
@@ -34,7 +35,6 @@ func draw(teW *widgets.Window, da *gtk.DrawingArea, cr *cairo.Context) {
 
 func keyPressEvent(teW *widgets.Window, win *gtk.Window, ev *gdk.Event) {
 	keyEvent := &gdk.EventKey{ev}
-	// fixme lookup key
 	item, found := keyMap[keyEvent.KeyVal()]
 	if found {
 		teWindow := widgets.ApplicationInstance.FindWindow(teW)
@@ -86,7 +86,7 @@ func Start() {
 		log.Fatal("Unable to create window:", err)
 	}
 
-	teWindow := widgets.ApplicationInstance.CreateWindow("te")
+	teWindow := widgets.ApplicationInstance.CreateWindow("te", os.Getwd())
 	setupWindow(teWindow, win)
 
 	// Begin executing the GTK main loop.  This blocks until
