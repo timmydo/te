@@ -7,11 +7,15 @@ type KeyPressInfo struct {
 	SuperMod bool
 	HyperMod bool
 
-	character string
+	name string
 }
 
 func NewKeyPressInfo(ch string) *KeyPressInfo {
 	kp := new(KeyPressInfo)
-	kp.character = ch
+	kp.name = ch
 	return kp
+}
+
+func (kpi *KeyPressInfo) GetName() string {
+	return kpi.name
 }

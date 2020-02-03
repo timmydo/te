@@ -7,6 +7,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/timmydo/te/buffer"
+	"github.com/timmydo/te/commands"
 	"github.com/timmydo/te/input"
 	"github.com/timmydo/te/theme"
 	"github.com/timmydo/te/widgets"
@@ -23,7 +24,12 @@ var (
 func init() {
 	keyMap = make(map[uint]*input.KeyPressInfo)
 	keyMap[0x61] = input.NewKeyPressInfo("a")
-
+	keyMap[0xff51] = input.NewKeyPressInfo("left")
+	keyMap[0xff52] = input.NewKeyPressInfo("up")
+	keyMap[0xff53] = input.NewKeyPressInfo("right")
+	keyMap[0xff54] = input.NewKeyPressInfo("down")
+	keyMap[0xff55] = input.NewKeyPressInfo("pageup")
+	keyMap[0xff56] = input.NewKeyPressInfo("pagedown")
 }
 
 func setColor(cr *cairo.Context, c theme.Color) {
@@ -38,7 +44,7 @@ func drawPanel(win *widgets.Window, cr *cairo.Context, x, y, width, height float
 
 func getLineToPrint(lineBytes []byte, runesPrinted int, runesOnLine int) string {
 	byteOffset := buffer.RuneToByteIndex(runesPrinted, lineBytes)
-	byteEnd := buffer.RuneToByteIndex(runesPrinted + runesOnLine, lineBytes)
+	byteEnd := buffer.RuneToByteIndex(runesPrinted+runesOnLine, lineBytes)
 	return string(lineBytes[byteOffset:byteEnd])
 }
 
@@ -118,10 +124,16 @@ func keyPressEvent(teW *widgets.Window, win *gtk.Window, ev *gdk.Event) {
 	keyEvent := &gdk.EventKey{ev}
 	item, found := keyMap[keyEvent.KeyVal()]
 	if found {
-		teWindow := widgets.ApplicationInstance.FindWindow(teW)
 		log.Println("Handle keypress %v\n", item)
-		teWindow.HandleKeyPress(item)
-		win.QueueDraw()
+		cmd := input.FindCommand(item)
+		if cmd != nil {
+
+			err := commands.GlobalCommands.ExecuteCommand(teW, cmd)
+			if err != nil {
+				log.Printf("Error: %v\n", err.Error())
+			}
+			win.QueueDraw()
+		}
 	} else {
 		log.Printf("Key not found %d\n", keyEvent.KeyVal())
 	}
