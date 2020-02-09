@@ -7,10 +7,14 @@ import (
 
 type MovePointLeftChar struct{}
 type MovePointRightChar struct{}
+type MovePointUpLine struct{}
+type MovePointDownLine struct{}
 
 func init() {
 	register(MovePointLeftChar{})
 	register(MovePointRightChar{})
+	register(MovePointUpLine{})
+	register(MovePointDownLine{})
 }
 
 func (MovePointLeftChar) Aliases() []string {
@@ -23,7 +27,7 @@ func (MovePointLeftChar) Complete(*widgets.Window, []string) []string {
 
 func (MovePointLeftChar) Execute(w *widgets.Window, args []string) error {
 	log.Printf("Before left-char: %v\n", w.OpenBuffer.Point)
-	w.OpenBuffer.Point = w.OpenBuffer.Point.Move(-1, w.OpenBuffer)
+	w.OpenBuffer.Point = w.OpenBuffer.Point.MoveInBounds(-1, w.OpenBuffer)
 	log.Printf("After left-char: %v\n", w.OpenBuffer.Point)
 	return nil
 }
@@ -38,7 +42,37 @@ func (MovePointRightChar) Complete(*widgets.Window, []string) []string {
 
 func (MovePointRightChar) Execute(w *widgets.Window, args []string) error {
 	log.Printf("Before r-char: %v\n", w.OpenBuffer.Point)
-	w.OpenBuffer.Point = w.OpenBuffer.Point.Move(1, w.OpenBuffer)
+	w.OpenBuffer.Point = w.OpenBuffer.Point.MoveInBounds(1, w.OpenBuffer)
+	log.Printf("After r-char: %v\n", w.OpenBuffer.Point)
+	return nil
+}
+
+func (MovePointUpLine) Aliases() []string {
+	return []string{"move-point-up-line"}
+}
+
+func (MovePointUpLine) Complete(*widgets.Window, []string) []string {
+	return nil
+}
+
+func (MovePointUpLine) Execute(w *widgets.Window, args []string) error {
+	log.Printf("Before r-char: %v\n", w.OpenBuffer.Point)
+	w.OpenBuffer.Point = w.OpenBuffer.Point.MoveDownLines(-1, w.OpenBuffer)
+	log.Printf("After r-char: %v\n", w.OpenBuffer.Point)
+	return nil
+}
+
+func (MovePointDownLine) Aliases() []string {
+	return []string{"move-point-down-line"}
+}
+
+func (MovePointDownLine) Complete(*widgets.Window, []string) []string {
+	return nil
+}
+
+func (MovePointDownLine) Execute(w *widgets.Window, args []string) error {
+	log.Printf("Before r-char: %v\n", w.OpenBuffer.Point)
+	w.OpenBuffer.Point = w.OpenBuffer.Point.MoveDownLines(1, w.OpenBuffer)
 	log.Printf("After r-char: %v\n", w.OpenBuffer.Point)
 	return nil
 }

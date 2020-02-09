@@ -59,7 +59,7 @@ func drawEditors(win *widgets.Window, cr *cairo.Context, x, y, width, height flo
 		lines := win.OpenBuffer.Data.Contents
 		ypos := y + fontSize
 		line := loc.Y
-		lineEnd := lines.End().Y
+		lineEnd := lines.End().Y + 1
 
 		lineNumberExtents := cr.TextExtents(fmt.Sprintf(" %d", (line+1)*10))
 		characterExtents := cr.TextExtents("X")
@@ -72,7 +72,7 @@ func drawEditors(win *widgets.Window, cr *cairo.Context, x, y, width, height flo
 		log.Printf("lne: %v\n", lineNumberExtents)
 		runeWidth := characterExtents.XAdvance
 		runeHeight := fontSize
-		textOffsetFromLineNumberColumn := runeWidth
+		textOffsetFromLineNumberColumn := characterExtents.XBearing
 		textStartX := x + lineNumberExtents.XAdvance + textOffsetFromLineNumberColumn
 		runesPerLine := int((width - x) / runeWidth)
 		for ypos < height && line < lineEnd {
@@ -83,22 +83,27 @@ func drawEditors(win *widgets.Window, cr *cairo.Context, x, y, width, height flo
 			setColor(cr, theme.LineNumberFontColor)
 			cr.ShowText(fmt.Sprintf(" %d", line+1))
 			runesOnLine := utf8.RuneCount(lineBytes)
-			for runesPrinted := 0; runesPrinted < runesOnLine; runesPrinted += runesPerLine {
+
+			// print cursor
+			if line == point.Y {
+				setColor(cr, theme.CursorColor)
+				log.Printf("cursor %v %v %v %v\n", textStartX+(float64(point.X)*runeWidth), ypos, runeWidth, runeHeight)
+				cr.Rectangle(textStartX+(float64(point.X)*runeWidth),
+					ypos+characterExtents.YBearing,
+					runeWidth,
+					runeHeight)
+				cr.Fill()
+				setColor(cr, theme.PrimaryFontColor)
+			}
+
+			for runesPrinted := 0; runesPrinted < runesOnLine; {
 				log.Printf("@ (%v, %v) +%d: %s\n", x, ypos, runesPrinted, string(lineBytes))
+
 				// print text on line
 				cr.MoveTo(textStartX, ypos)
 				setColor(cr, theme.PrimaryFontColor)
 				cr.ShowText(getLineToPrint(lineBytes, runesPrinted, runesOnLine))
-
-				// print cursor
-				if line == point.Y && point.X >= runesPrinted && point.X < runesOnLine {
-					setColor(cr, theme.CursorColor)
-					log.Printf("cursor %v %v %v %v\n", textStartX+(float64(point.X-runesPrinted)*runeWidth), ypos, runeWidth, runeHeight)
-					cr.Rectangle(textStartX+(float64(point.X-runesPrinted)*runeWidth), ypos, runeWidth, runeHeight)
-					cr.Fill()
-					setColor(cr, theme.PrimaryFontColor)
-				}
-
+				runesPrinted += runesPerLine
 				ypos += fontSize
 			}
 

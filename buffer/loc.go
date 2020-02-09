@@ -1,6 +1,7 @@
 package buffer
 
 import (
+	"log"
 	"unicode/utf8"
 )
 
@@ -120,6 +121,32 @@ func (l Loc) Diff(a, b Loc, buf *Buffer) int {
 }
 func (l Loc) Move(n int, buf *Buffer) Loc {
 	return l.MoveLA(n, buf.Data.Contents)
+}
+
+func (l Loc) MoveDownLines(n int, buf *Buffer) Loc {
+	log.Printf("End: %v\n", buf.Data.Contents.End())
+	if l.Y+n < 0 {
+		return Loc{l.X, 0}
+	}
+
+	if l.Y+n > buf.Data.Contents.End().Y {
+		return Loc{l.X, buf.Data.Contents.End().Y}
+	}
+
+	return Loc{l.X, l.Y + n}
+}
+
+func (l Loc) MoveInBounds(n int, buf *Buffer) Loc {
+	newPos := l.Move(n, buf)
+	if newPos.GreaterEqual(buf.Data.Contents.End()) {
+		return buf.Data.Contents.End()
+	}
+
+	if newPos.LessEqual(buf.Data.Contents.Start()) {
+		return buf.Data.Contents.Start()
+	}
+
+	return newPos
 }
 
 // ByteOffset is just like ToCharPos except it counts bytes instead of runes
