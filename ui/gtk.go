@@ -30,6 +30,8 @@ func init() {
 	keyMap[0xff54] = input.NewKeyPressInfo("down")
 	keyMap[0xff55] = input.NewKeyPressInfo("pageup")
 	keyMap[0xff56] = input.NewKeyPressInfo("pagedown")
+	keyMap[0xff0d] = input.NewKeyPressInfo("return")
+	keyMap[0x0061] = input.NewKeyPressInfo("a")
 }
 
 func setColor(cr *cairo.Context, c theme.Color) {
@@ -104,9 +106,9 @@ func drawEditors(win *widgets.Window, cr *cairo.Context, x, y, width, height flo
 				setColor(cr, theme.PrimaryFontColor)
 				cr.ShowText(getLineToPrint(lineBytes, runesPrinted, runesOnLine))
 				runesPrinted += runesPerLine
-				ypos += fontSize
 			}
 
+			ypos += fontSize
 			line++
 
 		}

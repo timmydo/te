@@ -56,7 +56,7 @@ func (cmds *Commands) ExecuteCommand(win *widgets.Window, args []string) error {
 		return errors.New("Expected a command.")
 	}
 	if cmd, ok := cmds.dict()[args[0]]; ok {
-		return cmd.Execute(win, args)
+		return cmd.Execute(win, args[1:])
 	}
 	return NoSuchCommand(args[0])
 }
