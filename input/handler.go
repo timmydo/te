@@ -20,8 +20,10 @@ func init() {
 	commands["right"] = makeBinding([]string{"move-point-right-char"})
 	commands["up"] = makeBinding([]string{"move-point-up-line"})
 	commands["down"] = makeBinding([]string{"move-point-down-line"})
-	commands["a"] = makeBinding([]string{"insert-text", "a"})
 	commands["return"] = makeBinding([]string{"insert-text", "\n"})
+	for _, key := range "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()=+-_/?\\|\"'<>,.~`[]{}" {
+		commands[string(key)] = makeBinding([]string{"insert-text", string(key)})
+	}
 }
 
 func FindCommand(kp *KeyPressInfo) []string {

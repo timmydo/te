@@ -17,23 +17,6 @@ import (
 	"github.com/gotk3/gotk3/gtk"
 )
 
-var (
-	keyMap map[uint]*input.KeyPressInfo
-)
-
-func init() {
-	keyMap = make(map[uint]*input.KeyPressInfo)
-	keyMap[0x61] = input.NewKeyPressInfo("a")
-	keyMap[0xff51] = input.NewKeyPressInfo("left")
-	keyMap[0xff52] = input.NewKeyPressInfo("up")
-	keyMap[0xff53] = input.NewKeyPressInfo("right")
-	keyMap[0xff54] = input.NewKeyPressInfo("down")
-	keyMap[0xff55] = input.NewKeyPressInfo("pageup")
-	keyMap[0xff56] = input.NewKeyPressInfo("pagedown")
-	keyMap[0xff0d] = input.NewKeyPressInfo("return")
-	keyMap[0x0061] = input.NewKeyPressInfo("a")
-}
-
 func setColor(cr *cairo.Context, c theme.Color) {
 	cr.SetSourceRGBA(c.R, c.G, c.B, c.A)
 }
