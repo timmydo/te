@@ -137,7 +137,11 @@ func (la *LineArray) newlineBelow(y int) {
 }
 
 // Inserts a byte array at a given location
-func (la *LineArray) insert(pos Loc, value []byte) {
+func (la *LineArray) InsertString(pos Loc, value string) Loc {
+	return la.insertBytes(pos, []byte(value))
+}
+
+func (la *LineArray) insertBytes(pos Loc, value []byte) Loc {
 	x, y := RuneToByteIndex(pos.X, la.lines[pos.Y].data), pos.Y
 	for i := 0; i < len(value); i++ {
 		if value[i] == '\n' {
@@ -149,6 +153,8 @@ func (la *LineArray) insert(pos Loc, value []byte) {
 		la.insertByte(Loc{x, y}, value[i])
 		x++
 	}
+
+	return Loc{x, y}
 }
 
 // InsertByte inserts a byte at a given location
@@ -160,14 +166,14 @@ func (la *LineArray) insertByte(pos Loc, value byte) {
 
 // joinLines joins the two lines a and b
 func (la *LineArray) joinLines(a, b int) {
-	la.insert(Loc{len(la.lines[a].data), a}, la.lines[b].data)
+	la.insertBytes(Loc{len(la.lines[a].data), a}, la.lines[b].data)
 	la.deleteLine(b)
 }
 
 // split splits a line at a given position
 func (la *LineArray) split(pos Loc) {
 	la.newlineBelow(pos.Y)
-	la.insert(Loc{0, pos.Y + 1}, la.lines[pos.Y].data[pos.X:])
+	la.insertBytes(Loc{0, pos.Y + 1}, la.lines[pos.Y].data[pos.X:])
 	la.deleteToEnd(Loc{pos.X, pos.Y})
 }
 
