@@ -20,6 +20,10 @@ func init() {
 	keyMap[0xff0d] = input.NewKeyPressInfo("return")
 
 	keyMap[0x0020] = input.NewKeyPressInfo("space")
+
+	keyMap[0xff50] = input.NewKeyPressInfo("home")
+	keyMap[0xff57] = input.NewKeyPressInfo("end")
+
 	keyMap[0xff08] = input.NewKeyPressInfo("backspace")
 	keyMap[0xff09] = input.NewKeyPressInfo("tab")
 	keyMap[0xff1b] = input.NewKeyPressInfo("escape")

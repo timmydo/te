@@ -154,6 +154,14 @@ func (l Loc) MoveInBounds(n int, buf *Buffer) Loc {
 	return newPos
 }
 
+func (l Loc) MoveStartOfLine(buf *Buffer) Loc {
+	return Loc{0, l.Y}
+}
+
+func (l Loc) MoveEndOfLine(buf *Buffer) Loc {
+	return Loc{buf.Data.Contents.RuneCount(l.Y), l.Y}
+}
+
 // ByteOffset is just like ToCharPos except it counts bytes instead of runes
 func ByteOffset(pos Loc, buf *Buffer) int {
 	x, y := pos.X, pos.Y

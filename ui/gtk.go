@@ -119,7 +119,7 @@ func keyPressEvent(teW *widgets.Window, win *gtk.Window, ev *gdk.Event) {
 	keyEvent := &gdk.EventKey{ev}
 	item, found := keyMap[keyEvent.KeyVal()]
 	if found {
-		log.Println("Handle keypress %v\n", item)
+		log.Printf("Handle keypress %v\n", item)
 		cmd := input.FindCommand(item)
 		if cmd != nil {
 

@@ -9,12 +9,16 @@ type MovePointLeftChar struct{}
 type MovePointRightChar struct{}
 type MovePointUpLine struct{}
 type MovePointDownLine struct{}
+type MovePointStartOfLine struct{}
+type MovePointEndOfLine struct{}
 
 func init() {
 	register(MovePointLeftChar{})
 	register(MovePointRightChar{})
 	register(MovePointUpLine{})
 	register(MovePointDownLine{})
+	register(MovePointStartOfLine{})
+	register(MovePointEndOfLine{})
 }
 
 func (MovePointLeftChar) Aliases() []string {
@@ -69,6 +73,34 @@ func (MovePointDownLine) Complete(*widgets.Window, []string) []string {
 
 func (MovePointDownLine) Execute(w *widgets.Window, args []string) error {
 	w.OpenBuffer.Point = w.OpenBuffer.Point.MoveDownLines(1, w.OpenBuffer)
+	log.Printf("After r-char: %v\n", w.OpenBuffer.Point)
+	return nil
+}
+
+func (MovePointStartOfLine) Aliases() []string {
+	return []string{"move-point-start-of-line"}
+}
+
+func (MovePointStartOfLine) Complete(*widgets.Window, []string) []string {
+	return nil
+}
+
+func (MovePointStartOfLine) Execute(w *widgets.Window, args []string) error {
+	w.OpenBuffer.Point = w.OpenBuffer.Point.MoveStartOfLine(w.OpenBuffer)
+	log.Printf("After r-char: %v\n", w.OpenBuffer.Point)
+	return nil
+}
+
+func (MovePointEndOfLine) Aliases() []string {
+	return []string{"move-point-end-of-line"}
+}
+
+func (MovePointEndOfLine) Complete(*widgets.Window, []string) []string {
+	return nil
+}
+
+func (MovePointEndOfLine) Execute(w *widgets.Window, args []string) error {
+	w.OpenBuffer.Point = w.OpenBuffer.Point.MoveEndOfLine(w.OpenBuffer)
 	log.Printf("After r-char: %v\n", w.OpenBuffer.Point)
 	return nil
 }
