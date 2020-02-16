@@ -20,7 +20,10 @@ func init() {
 	commands["right"] = makeBinding([]string{"move-point-right-char"})
 	commands["up"] = makeBinding([]string{"move-point-up-line"})
 	commands["down"] = makeBinding([]string{"move-point-down-line"})
+	commands["delete"] = makeBinding([]string{"delete-text-forward"})
+	commands["backspace"] = makeBinding([]string{"delete-text-backward"})
 	commands["return"] = makeBinding([]string{"insert-text", "\n"})
+	commands["space"] = makeBinding([]string{"insert-text", " "})
 	for _, key := range "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()=+-_/?\\|\"'<>,.~`[]{}" {
 		commands[string(key)] = makeBinding([]string{"insert-text", string(key)})
 	}

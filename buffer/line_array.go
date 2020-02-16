@@ -178,7 +178,7 @@ func (la *LineArray) split(pos Loc) {
 }
 
 // removes from start to end
-func (la *LineArray) remove(start, end Loc) []byte {
+func (la *LineArray) Remove(start, end Loc) []byte {
 	sub := la.Substr(start, end)
 	startX := RuneToByteIndex(start.X, la.lines[start.Y].data)
 	endX := RuneToByteIndex(end.X, la.lines[end.Y].data)
@@ -258,4 +258,8 @@ func (la *LineArray) LineBytes(n int) []byte {
 		return []byte{}
 	}
 	return la.lines[n].data
+}
+
+func (la *LineArray) RuneCount(n int) int {
+	return utf8.RuneCount(la.LineBytes(n))
 }

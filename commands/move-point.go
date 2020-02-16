@@ -26,9 +26,8 @@ func (MovePointLeftChar) Complete(*widgets.Window, []string) []string {
 }
 
 func (MovePointLeftChar) Execute(w *widgets.Window, args []string) error {
-	log.Printf("Before left-char: %v\n", w.OpenBuffer.Point)
-	w.OpenBuffer.Point = w.OpenBuffer.Point.MoveInBounds(-1, w.OpenBuffer)
-	log.Printf("After left-char: %v\n", w.OpenBuffer.Point)
+	// if past end of line, move it to the line
+	w.OpenBuffer.Point = w.OpenBuffer.Point.MoveInBounds(0, w.OpenBuffer).MoveInBounds(-1, w.OpenBuffer)
 	return nil
 }
 
@@ -41,8 +40,7 @@ func (MovePointRightChar) Complete(*widgets.Window, []string) []string {
 }
 
 func (MovePointRightChar) Execute(w *widgets.Window, args []string) error {
-	log.Printf("Before r-char: %v\n", w.OpenBuffer.Point)
-	w.OpenBuffer.Point = w.OpenBuffer.Point.MoveInBounds(1, w.OpenBuffer)
+	w.OpenBuffer.Point = w.OpenBuffer.Point.MoveInBounds(0, w.OpenBuffer).MoveInBounds(1, w.OpenBuffer)
 	log.Printf("After r-char: %v\n", w.OpenBuffer.Point)
 	return nil
 }
@@ -56,7 +54,6 @@ func (MovePointUpLine) Complete(*widgets.Window, []string) []string {
 }
 
 func (MovePointUpLine) Execute(w *widgets.Window, args []string) error {
-	log.Printf("Before r-char: %v\n", w.OpenBuffer.Point)
 	w.OpenBuffer.Point = w.OpenBuffer.Point.MoveDownLines(-1, w.OpenBuffer)
 	log.Printf("After r-char: %v\n", w.OpenBuffer.Point)
 	return nil
@@ -71,7 +68,6 @@ func (MovePointDownLine) Complete(*widgets.Window, []string) []string {
 }
 
 func (MovePointDownLine) Execute(w *widgets.Window, args []string) error {
-	log.Printf("Before r-char: %v\n", w.OpenBuffer.Point)
 	w.OpenBuffer.Point = w.OpenBuffer.Point.MoveDownLines(1, w.OpenBuffer)
 	log.Printf("After r-char: %v\n", w.OpenBuffer.Point)
 	return nil

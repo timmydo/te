@@ -2,7 +2,6 @@ package buffer
 
 import (
 	"log"
-	"unicode/utf8"
 )
 
 // Loc stores a location
@@ -67,9 +66,9 @@ func DiffLA(a, b Loc, buf *LineArray) int {
 	loc := 0
 	for i := a.Y + 1; i < b.Y; i++ {
 		// + 1 for the newline
-		loc += utf8.RuneCount(buf.LineBytes(i)) + 1
+		loc += buf.RuneCount(i) + 1
 	}
-	loc += utf8.RuneCount(buf.LineBytes(a.Y)) - a.X + b.X + 1
+	loc += buf.RuneCount(a.Y) - a.X + b.X + 1
 	return loc
 }
 
@@ -79,7 +78,7 @@ func (l Loc) right(buf *LineArray) Loc {
 		return Loc{l.X + 1, l.Y}
 	}
 	var res Loc
-	if l.X < utf8.RuneCount(buf.LineBytes(l.Y)) {
+	if l.X < buf.RuneCount(l.Y) {
 		res = Loc{l.X + 1, l.Y}
 	} else {
 		res = Loc{0, l.Y + 1}
@@ -96,7 +95,7 @@ func (l Loc) left(buf *LineArray) Loc {
 	if l.X > 0 {
 		res = Loc{l.X - 1, l.Y}
 	} else {
-		res = Loc{utf8.RuneCount(buf.LineBytes(l.Y - 1)), l.Y - 1}
+		res = Loc{buf.RuneCount(l.Y - 1), l.Y - 1}
 	}
 	return res
 }
@@ -113,6 +112,12 @@ func (l Loc) MoveLA(n int, buf *LineArray) Loc {
 	for i := 0; i < -n; i++ {
 		l = l.left(buf)
 	}
+
+	lineRuneCount := buf.RuneCount(l.Y)
+	if l.X > lineRuneCount {
+		l = Loc{lineRuneCount, l.Y}
+	}
+
 	return l
 }
 

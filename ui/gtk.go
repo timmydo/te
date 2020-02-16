@@ -37,7 +37,7 @@ func drawEditors(win *widgets.Window, cr *cairo.Context, x, y, width, height flo
 	cr.SelectFontFace("monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
 	fontSize := 14.0
 	cr.SetFontSize(fontSize)
-	log.Printf("drawEditors %v\n", win.OpenBuffer)
+	//	log.Printf("drawEditors %v\n", win.OpenBuffer)
 	if win.OpenBuffer != nil {
 
 		loc := win.OpenBuffer.GetScrollPosition()
@@ -53,8 +53,8 @@ func drawEditors(win *widgets.Window, cr *cairo.Context, x, y, width, height flo
 		setColor(cr, theme.LineNumberBackgroundColor)
 		cr.Rectangle(x, y, lineNumberExtents.XAdvance, height)
 		cr.Fill()
-		log.Printf("fill: %v %v %v %v\n", x, y, x+lineNumberExtents.XAdvance, height)
-		log.Printf("lne: %v\n", lineNumberExtents)
+		// log.Printf("fill: %v %v %v %v\n", x, y, x+lineNumberExtents.XAdvance, height)
+		// log.Printf("lne: %v\n", lineNumberExtents)
 		runeWidth := characterExtents.XAdvance
 		runeHeight := fontSize
 		textOffsetFromLineNumberColumn := characterExtents.XBearing
@@ -72,8 +72,13 @@ func drawEditors(win *widgets.Window, cr *cairo.Context, x, y, width, height flo
 			// print cursor
 			if line == point.Y {
 				setColor(cr, theme.CursorColor)
-				log.Printf("cursor %v %v %v %v\n", textStartX+(float64(point.X)*runeWidth), ypos, runeWidth, runeHeight)
-				cr.Rectangle(textStartX+(float64(point.X)*runeWidth),
+				pointXPos := point.X
+				if pointXPos > runesOnLine {
+					pointXPos = runesOnLine
+				}
+
+				// log.Printf("cursor %v %v %v %v\n", textStartX+(float64(pointXPos)*runeWidth), ypos, runeWidth, runeHeight)
+				cr.Rectangle(textStartX+(float64(pointXPos)*runeWidth),
 					ypos+characterExtents.YBearing,
 					runeWidth,
 					runeHeight)
@@ -82,7 +87,7 @@ func drawEditors(win *widgets.Window, cr *cairo.Context, x, y, width, height flo
 			}
 
 			for runesPrinted := 0; runesPrinted < runesOnLine; {
-				log.Printf("@ (%v, %v) +%d: %s\n", x, ypos, runesPrinted, string(lineBytes))
+				// log.Printf("@ (%v, %v) +%d: %s\n", x, ypos, runesPrinted, string(lineBytes))
 
 				// print text on line
 				cr.MoveTo(textStartX, ypos)
@@ -104,7 +109,7 @@ func draw(win *widgets.Window, da *gtk.DrawingArea, cr *cairo.Context) {
 	width := float64(target.GetWidth())
 	leftCol := width * win.LeftPanelWidthPercent / 100.0
 
-	log.Printf("draw(%v) size %v x %v\n", win, width, height)
+	// log.Printf("draw(%v) size %v x %v\n", win, width, height)
 
 	drawPanel(win, cr, 0, 0, leftCol, height)
 	drawEditors(win, cr, leftCol, 0, width, height)
