@@ -34,7 +34,7 @@ func drawEditors(win *widgets.Window, cr *cairo.Context, x, y, width, height flo
 	//	log.Printf("drawEditors %v\n", win.OpenBuffer)
 	if win.OpenBuffer != nil {
 
-		loc := win.OpenBuffer.GetScrollPosition()
+		loc := win.OpenBuffer.ScrollPosition
 		lines := win.OpenBuffer.Data.Contents
 		ypos := y + fontSize
 		line := loc.Y
@@ -48,13 +48,14 @@ func drawEditors(win *widgets.Window, cr *cairo.Context, x, y, width, height flo
 		setColor(cr, theme.LineNumberBackgroundColor)
 		cr.Rectangle(x, y, lineNumberExtents.XAdvance, height)
 		cr.Fill()
-		log.Printf("character extents: %v\n", characterExtents)
+		// log.Printf("character extents: %v\n", characterExtents)
 		// log.Printf("fill: %v %v %v %v\n", x, y, x+lineNumberExtents.XAdvance, height)
 		// log.Printf("lne: %v\n", lineNumberExtents)
 		runeWidth := characterExtents.XAdvance
 		runeHeight := fontSize
 		textOffsetFromLineNumberColumn := characterExtents.XBearing
 		textStartX := x + lineNumberExtents.XAdvance + textOffsetFromLineNumberColumn
+
 		for ypos < height && line < lineEnd {
 			lineBytes := lines.LineBytes(line)
 
@@ -118,7 +119,6 @@ func drawEditors(win *widgets.Window, cr *cairo.Context, x, y, width, height flo
 				cr.MoveTo(currentX, currentY)
 				setColor(cr, theme.PrimaryFontColor)
 				cr.ShowText(currentCharacter)
-				log.Printf("Draw %v,%v\n", currentX, currentY)
 				currentX += characterExtents.XAdvance
 				currentY += characterExtents.YAdvance
 			}
@@ -127,6 +127,8 @@ func drawEditors(win *widgets.Window, cr *cairo.Context, x, y, width, height flo
 			line++
 
 		}
+
+		win.OpenBuffer.LinesInDisplay = line - loc.Y
 	}
 }
 
@@ -149,7 +151,7 @@ func keyPressEvent(teW *widgets.Window, win *gtk.Window, ev *gdk.Event) {
 	if found {
 		item.ShiftMod = keyState&gdk.GDK_SHIFT_MASK != 0
 		item.CtrlMod = keyState&gdk.GDK_CONTROL_MASK != 0
-		item.MetaMod = keyState&gdk.GDK_META_MASK != 0
+		item.MetaMod = keyState&gdk.GDK_MOD1_MASK != 0
 		item.SuperMod = keyState&gdk.GDK_SUPER_MASK != 0
 		item.HyperMod = keyState&gdk.GDK_HYPER_MASK != 0
 		cmd := input.FindCommand(item)

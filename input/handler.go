@@ -24,6 +24,7 @@ func init() {
 	commands["Ctrl-p"] = makeBinding([]string{"move-point-up-line"})
 	commands["down"] = makeBinding([]string{"move-point-down-line"})
 	commands["Ctrl-n"] = makeBinding([]string{"move-point-down-line"})
+	commands["Ctrl-d"] = makeBinding([]string{"delete-text-forward"})
 	commands["delete"] = makeBinding([]string{"delete-text-forward"})
 	commands["backspace"] = makeBinding([]string{"delete-text-backward"})
 	commands["return"] = makeBinding([]string{"insert-text", "\n"})
@@ -37,6 +38,11 @@ func init() {
 
 	commands["Ctrl-g"] = makeBinding([]string{"clear-mark"})
 	commands["Ctrl-space"] = makeBinding([]string{"set-mark-at-point"})
+
+	commands["Alt-v"] = makeBinding([]string{"scroll-page-up"})
+	commands["pageup"] = makeBinding([]string{"scroll-page-up"})
+	commands["Ctrl-v"] = makeBinding([]string{"scroll-page-down"})
+	commands["pagedown"] = makeBinding([]string{"scroll-page-down"})
 
 	for _, key := range "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()=+-_/?\\|\"'<>,.~`[]{}" {
 		commands[string(key)] = makeBinding([]string{"insert-text", string(key)})
