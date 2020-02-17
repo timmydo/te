@@ -35,6 +35,9 @@ func init() {
 	commands["Ctrl-a"] = makeBinding([]string{"move-point-start-of-line"})
 	commands["Ctrl-e"] = makeBinding([]string{"move-point-end-of-line"})
 
+	commands["Ctrl-g"] = makeBinding([]string{"clear-mark"})
+	commands["Ctrl-space"] = makeBinding([]string{"set-mark-at-point"})
+
 	for _, key := range "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()=+-_/?\\|\"'<>,.~`[]{}" {
 		commands[string(key)] = makeBinding([]string{"insert-text", string(key)})
 	}

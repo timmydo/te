@@ -13,4 +13,5 @@ var (
 	LineNumberFontColor       = Color{0.0, 0.0, 0.0, 1.0}
 	LineNumberBackgroundColor = Color{0.9, 0.9, 0.9, 1.0}
 	CursorColor               = Color{0.9, 0.4, 0.4, 1.0}
+	SelectionColor            = Color{0.9, 0.9, 0.4, 1.0}
 )
