@@ -117,9 +117,14 @@ func draw(win *widgets.Window, da *gtk.DrawingArea, cr *cairo.Context) {
 
 func keyPressEvent(teW *widgets.Window, win *gtk.Window, ev *gdk.Event) {
 	keyEvent := &gdk.EventKey{ev}
+	keyState := gdk.ModifierType(keyEvent.State())
 	item, found := keyMap[keyEvent.KeyVal()]
 	if found {
-		log.Printf("Handle keypress %v\n", item)
+		item.ShiftMod = keyState&gdk.GDK_SHIFT_MASK != 0
+		item.CtrlMod = keyState&gdk.GDK_CONTROL_MASK != 0
+		item.MetaMod = keyState&gdk.GDK_META_MASK != 0
+		item.SuperMod = keyState&gdk.GDK_SUPER_MASK != 0
+		item.HyperMod = keyState&gdk.GDK_HYPER_MASK != 0
 		cmd := input.FindCommand(item)
 		if cmd != nil {
 
