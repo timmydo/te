@@ -9,9 +9,10 @@ type Window struct {
 	rootDirectory         string
 	OpenBuffer            *buffer.Buffer
 	LeftPanelWidthPercent float64
+	Clipboard             *buffer.Clipboard
 }
 
 func NewWindow(name string, rootDirectory string) *Window {
-	w := &Window{name, rootDirectory, buffer.GetScratchBuffer(), float64(30)}
+	w := &Window{name, rootDirectory, buffer.GetScratchBuffer(), float64(30), buffer.GetClipboard()}
 	return w
 }

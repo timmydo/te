@@ -210,6 +210,16 @@ func (la *LineArray) deleteLine(y int) {
 	la.lines = la.lines[:y+copy(la.lines[y:], la.lines[y+1:])]
 }
 
+func (la *LineArray) DeleteLine(y int) {
+	if y >= 0 && y < len(la.lines) {
+		if len(la.lines) == 1 {
+			la.lines[0] = Line{[]byte{}}
+		} else {
+			la.deleteLine(y)
+		}
+	}
+}
+
 // DeleteByte deletes the byte at a position
 func (la *LineArray) deleteByte(pos Loc) {
 	la.lines[pos.Y].data = la.lines[pos.Y].data[:pos.X+copy(la.lines[pos.Y].data[pos.X:], la.lines[pos.Y].data[pos.X+1:])]

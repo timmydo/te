@@ -36,12 +36,14 @@ func init() {
 	commands["Ctrl-a"] = makeBinding([]string{"move-point-start-of-line"})
 	commands["Ctrl-e"] = makeBinding([]string{"move-point-end-of-line"})
 
+	commands["Ctrl-x"] = makeBinding([]string{"cut-text"})
+	commands["Ctrl-c"] = makeBinding([]string{"copy-text"})
+	commands["Ctrl-v"] = makeBinding([]string{"paste-text"})
+
 	commands["Ctrl-g"] = makeBinding([]string{"clear-mark"})
 	commands["Ctrl-space"] = makeBinding([]string{"set-mark-at-point"})
 
-	commands["Alt-v"] = makeBinding([]string{"scroll-page-up"})
 	commands["pageup"] = makeBinding([]string{"scroll-page-up"})
-	commands["Ctrl-v"] = makeBinding([]string{"scroll-page-down"})
 	commands["pagedown"] = makeBinding([]string{"scroll-page-down"})
 
 	for _, key := range "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()=+-_/?\\|\"'<>,.~`[]{}" {
