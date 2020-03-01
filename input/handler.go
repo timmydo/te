@@ -40,6 +40,9 @@ func init() {
 	commands["Ctrl-c"] = makeBinding([]string{"copy-text"})
 	commands["Ctrl-v"] = makeBinding([]string{"paste-text"})
 
+	commands["Ctrl-z"] = makeBinding([]string{"undo"})
+	commands["Ctrl-y"] = makeBinding([]string{"redo"})
+
 	commands["Ctrl-g"] = makeBinding([]string{"clear-mark"})
 	commands["Ctrl-space"] = makeBinding([]string{"set-mark-at-point"})
 

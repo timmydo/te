@@ -1,6 +1,4 @@
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
-git.sr.ht/~sircmpwn/aerc v0.0.0-20200124172559-e78b7b85e479 h1:aVbGraAVv5ynpavkkVRntVyNLLVcr3eZLsy2fA5DU/0=
-git.sr.ht/~sircmpwn/aerc v0.0.0-20200124172559-e78b7b85e479/go.mod h1:hbogGz19/qL+jkpbj2WPVymqFLasCoCe0dbtsC2D63I=
 git.sr.ht/~sircmpwn/getopt v0.0.0-20190621174457-292febf82fd0 h1:gUeOEsT0mhoCKxKYJk8HeYtUZME686xs70eG2l80W5U=
 git.sr.ht/~sircmpwn/getopt v0.0.0-20190621174457-292febf82fd0/go.mod h1:wMEGFFFNuPos7vHmWXfszqImLppbc0wEhh6JBfJIUgw=
 github.com/DATA-DOG/go-sqlmock v1.3.3/go.mod h1:f/Ixk793poVmq4qj/V1dPUg2JEAKC73Q5eFN3EC/SaM=
@@ -78,6 +76,8 @@ github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/stretchr/testify v1.4.0 h1:2E4SXV/wtOkTonXsotYi4li6zVWxYlZuYNCXe9XRJyk=
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
+github.com/timmydo/golang-ring v0.0.0-20190304061218-d34796e0a6c2 h1:gsqrEemvKHy0rsW3ATlUY+vB9NznTWbCwXWTesiohj4=
+github.com/timmydo/golang-ring v0.0.0-20190304061218-d34796e0a6c2/go.mod h1:oBL6HemND0fCrBVSDD4GYSqFKz3AWnJl4mu0dHd4EdM=
 github.com/zenhack/go.notmuch v0.0.0-20190821052706-5a1961965cfb/go.mod h1:zJtFvR3NinVdmBiLyB4MyXKmqyVfZEb2cK97ISfTgV8=
 github.com/zyedidia/micro v1.4.1 h1:OuszISyaEPK/8xxkklkh7dp2ragvKDEnr4RyHfJcQdo=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=

@@ -28,6 +28,7 @@ func (cmd InsertText) Execute(w *widgets.Window, args []string) error {
 		return errors.New("insert-text: Missing arguments")
 	}
 	log.Printf("cmd insert-text: %v\n", cmd)
+	w.OpenBuffer.TakeSnapshot(true)
 	w.OpenBuffer.Mark = buffer.Loc{-1, -1}
 	newPoint := w.OpenBuffer.Data.Contents.InsertString(w.OpenBuffer.Point, args[0])
 	w.OpenBuffer.Point = newPoint

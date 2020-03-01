@@ -116,6 +116,18 @@ func NewLineArray(size uint64, reader io.Reader) *LineArray {
 	return la
 }
 
+func (la *LineArray) Copy() *LineArray {
+	// fixme wasteful
+	lines := make([]Line, len(la.lines))
+	for i := range lines {
+		lines[i] = Line{make([]byte, len(la.lines[i].data))}
+		copy(lines[i].data, la.lines[i].data)
+	}
+
+	cpy := &LineArray{lines, la.Endings, la.initsize}
+	return cpy
+}
+
 // Bytes returns the string that should be written to disk when
 // the line array is saved
 func (la *LineArray) Bytes() []byte {
