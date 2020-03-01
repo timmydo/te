@@ -1,6 +1,7 @@
 package buffer
 
 import (
+	"container/ring"
 	"log"
 	"strings"
 	"time"
@@ -14,15 +15,67 @@ type Buffer struct {
 	Data           *BufferData
 	Point          Loc
 	Mark           Loc
-	scrollPosition Loc
+	ScrollPosition Loc
+	LinesInDisplay int
+	UndoHistory    *ring.Ring
+	RedoHistory    *ring.Ring
 }
 
 type BufferData struct {
 	ModTime    time.Time
 	isModified bool
-	ReadOnly   bool
 	Filename   string
 	Contents   *LineArray
+}
+
+type BufferSnapshot struct {
+	timestamp        time.Time
+	contents         *LineArray
+	isModified       bool
+	point            Loc
+	mark             Loc
+	scrollPosition   Loc
+	ModifiesContents bool
+}
+
+func (b *Buffer) Snapshot(willChangeContents bool) *BufferSnapshot {
+	snap := &BufferSnapshot{}
+	snap.timestamp = time.Now()
+	snap.isModified = b.Data.isModified
+	snap.point = b.Point
+	snap.mark = b.Mark
+	snap.scrollPosition = b.ScrollPosition
+	if willChangeContents {
+		snap.contents = b.Data.Contents.Copy()
+	} else {
+		snap.contents = nil
+	}
+
+	return snap
+}
+
+func (b *Buffer) TakeSnapshot(willChangeContents bool) {
+	// clear the redo history
+	b.RedoHistory = newRing()
+	snap := b.Snapshot(willChangeContents)
+	// log.Printf("Snapbuf %v %v\n", snap.timestamp, string(snap.contents.Bytes()))
+	b.UndoHistory = b.UndoHistory.Next()
+	b.UndoHistory.Value = snap
+}
+
+func (b *Buffer) RestoreSnapshot(snap *BufferSnapshot) {
+	b.Data.isModified = snap.isModified
+	b.Point = snap.point
+	b.Mark = snap.mark
+	b.ScrollPosition = snap.scrollPosition
+	if snap.contents != nil {
+		b.Data.Contents = snap.contents
+		// log.Printf("Restore %v %v\n", snap.timestamp, string(snap.contents.Bytes()))
+	}
+}
+
+func (snap *BufferSnapshot) ModifiesBuffer() bool {
+	return snap.contents != nil
 }
 
 func GetScratchBuffer() *Buffer {
@@ -49,12 +102,14 @@ func findScratchBuffer() *Buffer {
 
 func newScratchBuffer() *Buffer {
 	la := NewLineArray(100, strings.NewReader("*scratch*\nhello world\nthis is a temp buffer\n"))
-	bd := &BufferData{time.Now(), false, false, "*scratch*", la}
-	b := &Buffer{bd, Loc{0, 0}, Loc{-1, -1}, Loc{0, 0}}
+	ub := newRing()
+	rb := newRing()
+	bd := &BufferData{time.Now(), false, "*scratch*", la}
+	b := &Buffer{bd, Loc{0, 0}, Loc{-1, -1}, Loc{0, 0}, 1, ub, rb}
 	log.Printf("New scratch buffer: %v", b)
 	return b
 }
 
-func (b *Buffer) GetScrollPosition() Loc {
-	return b.scrollPosition
+func newRing() *ring.Ring {
+	return ring.New(100)
 }

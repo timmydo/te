@@ -17,5 +17,21 @@ func NewKeyPressInfo(ch string) *KeyPressInfo {
 }
 
 func (kpi *KeyPressInfo) GetName() string {
-	return kpi.name
+	str := kpi.name
+	if kpi.HyperMod {
+		str = "Hyper-" + str
+	}
+	if kpi.SuperMod {
+		str = "Super-" + str
+	}
+	if kpi.MetaMod {
+		str = "Alt-" + str
+	}
+	if kpi.ShiftMod {
+		str = "Shift-" + str
+	}
+	if kpi.CtrlMod {
+		str = "Ctrl-" + str
+	}
+	return str
 }

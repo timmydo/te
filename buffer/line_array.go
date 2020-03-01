@@ -116,6 +116,18 @@ func NewLineArray(size uint64, reader io.Reader) *LineArray {
 	return la
 }
 
+func (la *LineArray) Copy() *LineArray {
+	// fixme wasteful
+	lines := make([]Line, len(la.lines))
+	for i := range lines {
+		lines[i] = Line{make([]byte, len(la.lines[i].data))}
+		copy(lines[i].data, la.lines[i].data)
+	}
+
+	cpy := &LineArray{lines, la.Endings, la.initsize}
+	return cpy
+}
+
 // Bytes returns the string that should be written to disk when
 // the line array is saved
 func (la *LineArray) Bytes() []byte {
@@ -208,6 +220,16 @@ func (la *LineArray) deleteFromStart(pos Loc) {
 // deleteLine deletes the line number
 func (la *LineArray) deleteLine(y int) {
 	la.lines = la.lines[:y+copy(la.lines[y:], la.lines[y+1:])]
+}
+
+func (la *LineArray) DeleteLine(y int) {
+	if y >= 0 && y < len(la.lines) {
+		if len(la.lines) == 1 {
+			la.lines[0] = Line{[]byte{}}
+		} else {
+			la.deleteLine(y)
+		}
+	}
 }
 
 // DeleteByte deletes the byte at a position

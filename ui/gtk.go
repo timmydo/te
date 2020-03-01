@@ -27,12 +27,6 @@ func drawPanel(win *widgets.Window, cr *cairo.Context, x, y, width, height float
 	cr.Fill()
 }
 
-func getLineToPrint(lineBytes []byte, runesPrinted int, runesOnLine int) string {
-	byteOffset := buffer.RuneToByteIndex(runesPrinted, lineBytes)
-	byteEnd := buffer.RuneToByteIndex(runesPrinted+runesOnLine, lineBytes)
-	return string(lineBytes[byteOffset:byteEnd])
-}
-
 func drawEditors(win *widgets.Window, cr *cairo.Context, x, y, width, height float64) {
 	cr.SelectFontFace("monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
 	fontSize := 14.0
@@ -40,7 +34,7 @@ func drawEditors(win *widgets.Window, cr *cairo.Context, x, y, width, height flo
 	//	log.Printf("drawEditors %v\n", win.OpenBuffer)
 	if win.OpenBuffer != nil {
 
-		loc := win.OpenBuffer.GetScrollPosition()
+		loc := win.OpenBuffer.ScrollPosition
 		lines := win.OpenBuffer.Data.Contents
 		ypos := y + fontSize
 		line := loc.Y
@@ -49,17 +43,19 @@ func drawEditors(win *widgets.Window, cr *cairo.Context, x, y, width, height flo
 		lineNumberExtents := cr.TextExtents(fmt.Sprintf(" %d", (line+1)*10))
 		characterExtents := cr.TextExtents("X")
 		point := win.OpenBuffer.Point
+		mark := win.OpenBuffer.Mark
 
 		setColor(cr, theme.LineNumberBackgroundColor)
 		cr.Rectangle(x, y, lineNumberExtents.XAdvance, height)
 		cr.Fill()
+		// log.Printf("character extents: %v\n", characterExtents)
 		// log.Printf("fill: %v %v %v %v\n", x, y, x+lineNumberExtents.XAdvance, height)
 		// log.Printf("lne: %v\n", lineNumberExtents)
 		runeWidth := characterExtents.XAdvance
 		runeHeight := fontSize
 		textOffsetFromLineNumberColumn := characterExtents.XBearing
 		textStartX := x + lineNumberExtents.XAdvance + textOffsetFromLineNumberColumn
-		runesPerLine := int((width - x) / runeWidth)
+
 		for ypos < height && line < lineEnd {
 			lineBytes := lines.LineBytes(line)
 
@@ -86,20 +82,53 @@ func drawEditors(win *widgets.Window, cr *cairo.Context, x, y, width, height flo
 				setColor(cr, theme.PrimaryFontColor)
 			}
 
-			for runesPrinted := 0; runesPrinted < runesOnLine; {
-				// log.Printf("@ (%v, %v) +%d: %s\n", x, ypos, runesPrinted, string(lineBytes))
+			lineByteOffset := 0
+			currentX := textStartX
+			currentY := ypos
+			// print text on line
+			for runesPrinted := 0; runesPrinted < runesOnLine; runesPrinted++ {
+				r, rSize := utf8.DecodeRune(lineBytes[lineByteOffset:])
+				currentCharacter := string(r)
+				lineByteOffset += rSize
+				currentLoc := buffer.Loc{runesPrinted, line}
+				inSelection := false
+				// if mark active
+				if mark.Y != -1 {
+					if mark.GreaterEqual(point) {
+						if currentLoc.GreaterThan(point) && currentLoc.LessEqual(mark) {
+							inSelection = true
+						}
+					} else {
+						if currentLoc.GreaterEqual(mark) && currentLoc.LessThan(point) {
+							inSelection = true
+						}
+					}
+				}
 
-				// print text on line
-				cr.MoveTo(textStartX, ypos)
+				// print selection background
+				if inSelection {
+					setColor(cr, theme.SelectionColor)
+					cr.Rectangle(textStartX+(float64(runesPrinted)*runeWidth),
+						ypos+characterExtents.YBearing,
+						runeWidth,
+						runeHeight)
+					cr.Fill()
+				}
+
+				// print character
+				cr.MoveTo(currentX, currentY)
 				setColor(cr, theme.PrimaryFontColor)
-				cr.ShowText(getLineToPrint(lineBytes, runesPrinted, runesOnLine))
-				runesPrinted += runesPerLine
+				cr.ShowText(currentCharacter)
+				currentX += characterExtents.XAdvance
+				currentY += characterExtents.YAdvance
 			}
 
 			ypos += fontSize
 			line++
 
 		}
+
+		win.OpenBuffer.LinesInDisplay = line - loc.Y
 	}
 }
 
@@ -117,9 +146,14 @@ func draw(win *widgets.Window, da *gtk.DrawingArea, cr *cairo.Context) {
 
 func keyPressEvent(teW *widgets.Window, win *gtk.Window, ev *gdk.Event) {
 	keyEvent := &gdk.EventKey{ev}
+	keyState := gdk.ModifierType(keyEvent.State())
 	item, found := keyMap[keyEvent.KeyVal()]
 	if found {
-		log.Printf("Handle keypress %v\n", item)
+		item.ShiftMod = keyState&gdk.GDK_SHIFT_MASK != 0
+		item.CtrlMod = keyState&gdk.GDK_CONTROL_MASK != 0
+		item.MetaMod = keyState&gdk.GDK_MOD1_MASK != 0
+		item.SuperMod = keyState&gdk.GDK_SUPER_MASK != 0
+		item.HyperMod = keyState&gdk.GDK_HYPER_MASK != 0
 		cmd := input.FindCommand(item)
 		if cmd != nil {
 

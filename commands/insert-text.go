@@ -2,8 +2,10 @@ package commands
 
 import (
 	"errors"
-	"github.com/timmydo/te/widgets"
 	"log"
+
+	"github.com/timmydo/te/buffer"
+	"github.com/timmydo/te/widgets"
 )
 
 type InsertText struct {
@@ -26,6 +28,8 @@ func (cmd InsertText) Execute(w *widgets.Window, args []string) error {
 		return errors.New("insert-text: Missing arguments")
 	}
 	log.Printf("cmd insert-text: %v\n", cmd)
+	w.OpenBuffer.TakeSnapshot(true)
+	w.OpenBuffer.Mark = buffer.Loc{-1, -1}
 	newPoint := w.OpenBuffer.Data.Contents.InsertString(w.OpenBuffer.Point, args[0])
 	w.OpenBuffer.Point = newPoint
 	return nil
