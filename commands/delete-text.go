@@ -21,6 +21,7 @@ func (DeleteTextForward) Complete(*widgets.Window, []string) []string {
 }
 
 func (cmd DeleteTextForward) Execute(w *widgets.Window, args []string) error {
+	w.OpenBuffer.TakeSnapshot(true)
 	start := w.OpenBuffer.Point.MoveInBounds(0, w.OpenBuffer)
 	end := start.MoveInBounds(1, w.OpenBuffer)
 	w.OpenBuffer.Data.Contents.Remove(start, end)
@@ -36,6 +37,7 @@ func (DeleteTextBackward) Complete(*widgets.Window, []string) []string {
 }
 
 func (cmd DeleteTextBackward) Execute(w *widgets.Window, args []string) error {
+	w.OpenBuffer.TakeSnapshot(true)
 	end := w.OpenBuffer.Point.MoveInBounds(0, w.OpenBuffer)
 	start := end.MoveInBounds(-1, w.OpenBuffer)
 	w.OpenBuffer.Data.Contents.Remove(start, end)
