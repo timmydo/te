@@ -1,8 +1,6 @@
 package commands
 
 import (
-	"log"
-
 	"github.com/timmydo/te/buffer"
 	"github.com/timmydo/te/widgets"
 )
@@ -24,8 +22,8 @@ func (SetMarkAtPoint) Complete(*widgets.Window, []string) []string {
 }
 
 func (cmd SetMarkAtPoint) Execute(w *widgets.Window, args []string) error {
+	w.OpenBuffer.TakeSnapshot(false)
 	w.OpenBuffer.Mark = w.OpenBuffer.Point
-	log.Printf("Mark: %v, Point: %v\n", w.OpenBuffer.Mark, w.OpenBuffer.Point)
 	return nil
 }
 

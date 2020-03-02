@@ -33,6 +33,7 @@ func (CutText) Complete(*widgets.Window, []string) []string {
 }
 
 func (cmd CutText) Execute(w *widgets.Window, args []string) error {
+	w.OpenBuffer.TakeSnapshot(true)
 	if w.OpenBuffer.Mark.Y == -1 {
 		ypos := w.OpenBuffer.Point.Y
 		w.Clipboard.SetData(string(w.OpenBuffer.Data.Contents.LineBytes(ypos)) + string(w.OpenBuffer.Data.Contents.Endings))
@@ -68,6 +69,7 @@ func (cmd CopyText) Execute(w *widgets.Window, args []string) error {
 		return nil
 	}
 
+	w.OpenBuffer.TakeSnapshot(false)
 	start, end := getSelection(w.OpenBuffer)
 	data := w.OpenBuffer.Data.Contents.Substr(start, end)
 	w.Clipboard.SetData(string(data))
@@ -85,6 +87,7 @@ func (PasteText) Complete(*widgets.Window, []string) []string {
 
 func (cmd PasteText) Execute(w *widgets.Window, args []string) error {
 	// if something is already selected, delete it
+	w.OpenBuffer.TakeSnapshot(true)
 	if w.OpenBuffer.Mark.Y != -1 {
 		start, end := getSelection(w.OpenBuffer)
 		w.OpenBuffer.Data.Contents.Remove(start, end)

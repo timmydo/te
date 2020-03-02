@@ -117,13 +117,8 @@ func NewLineArray(size uint64, reader io.Reader) *LineArray {
 }
 
 func (la *LineArray) Copy() *LineArray {
-	// fixme wasteful
-	lines := make([]Line, len(la.lines))
-	for i := range lines {
-		lines[i] = Line{make([]byte, len(la.lines[i].data))}
-		copy(lines[i].data, la.lines[i].data)
-	}
-
+	var nilSlice []Line
+	lines := append(nilSlice, la.lines...)
 	cpy := &LineArray{lines, la.Endings, la.initsize}
 	return cpy
 }
@@ -148,7 +143,6 @@ func (la *LineArray) newlineBelow(y int) {
 	la.lines[y+1] = Line{[]byte{}}
 }
 
-// Inserts a byte array at a given location
 func (la *LineArray) InsertString(pos Loc, value string) Loc {
 	return la.insertBytes(pos, []byte(value))
 }
@@ -169,14 +163,15 @@ func (la *LineArray) insertBytes(pos Loc, value []byte) Loc {
 	return Loc{x, y}
 }
 
-// InsertByte inserts a byte at a given location
 func (la *LineArray) insertByte(pos Loc, value byte) {
-	la.lines[pos.Y].data = append(la.lines[pos.Y].data, 0)
-	copy(la.lines[pos.Y].data[pos.X+1:], la.lines[pos.Y].data[pos.X:])
-	la.lines[pos.Y].data[pos.X] = value
+	oldLine := la.lines[pos.Y].data
+	newLine := make([]byte, len(oldLine)+1)
+	copy(newLine[:pos.X], oldLine[:pos.X])
+	newLine[pos.X] = value
+	copy(newLine[pos.X+1:], oldLine[pos.X:])
+	la.lines[pos.Y].data = newLine
 }
 
-// joinLines joins the two lines a and b
 func (la *LineArray) joinLines(a, b int) {
 	la.insertBytes(Loc{len(la.lines[a].data), a}, la.lines[b].data)
 	la.deleteLine(b)
@@ -195,7 +190,11 @@ func (la *LineArray) Remove(start, end Loc) []byte {
 	startX := RuneToByteIndex(start.X, la.lines[start.Y].data)
 	endX := RuneToByteIndex(end.X, la.lines[end.Y].data)
 	if start.Y == end.Y {
-		la.lines[start.Y].data = append(la.lines[start.Y].data[:startX], la.lines[start.Y].data[endX:]...)
+		currentLine := la.lines[start.Y].data
+		newLine := make([]byte, len(currentLine)-(endX-startX))
+		copy(newLine, currentLine[:startX])
+		copy(newLine[startX:], currentLine[endX:])
+		la.lines[start.Y].data = newLine
 	} else {
 		for i := start.Y + 1; i <= end.Y-1; i++ {
 			la.deleteLine(start.Y + 1)
@@ -209,12 +208,18 @@ func (la *LineArray) Remove(start, end Loc) []byte {
 
 // deleteToEnd deletes from the end of a line to the position
 func (la *LineArray) deleteToEnd(pos Loc) {
-	la.lines[pos.Y].data = la.lines[pos.Y].data[:pos.X]
+	oldLine := la.lines[pos.Y].data
+	newLine := make([]byte, pos.X)
+	copy(newLine[:pos.X], oldLine[:pos.X])
+	la.lines[pos.Y].data = newLine
 }
 
 // deleteFromStart deletes from the start of a line to the position
 func (la *LineArray) deleteFromStart(pos Loc) {
-	la.lines[pos.Y].data = la.lines[pos.Y].data[pos.X+1:]
+	oldLine := la.lines[pos.Y].data
+	newLine := make([]byte, len(oldLine[pos.X+1:]))
+	copy(newLine[:], oldLine[pos.X+1:])
+	la.lines[pos.Y].data = newLine
 }
 
 // deleteLine deletes the line number
@@ -234,7 +239,11 @@ func (la *LineArray) DeleteLine(y int) {
 
 // DeleteByte deletes the byte at a position
 func (la *LineArray) deleteByte(pos Loc) {
-	la.lines[pos.Y].data = la.lines[pos.Y].data[:pos.X+copy(la.lines[pos.Y].data[pos.X:], la.lines[pos.Y].data[pos.X+1:])]
+	oldLine := la.lines[pos.Y].data
+	newLine := make([]byte, len(oldLine)-1)
+	copy(newLine[:pos.X], oldLine[:pos.X])
+	copy(newLine[pos.X:], oldLine[pos.X+1:])
+	la.lines[pos.Y].data = newLine
 }
 
 // Substr returns the string representation between two locations
