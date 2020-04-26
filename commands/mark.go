@@ -1,8 +1,8 @@
 package commands
 
 import (
-	"github.com/timmydo/te/buffer"
-	"github.com/timmydo/te/widgets"
+	"github.com/timmydo/te/interfaces"
+	"github.com/timmydo/te/linearray"
 )
 
 type SetMarkAtPoint struct{}
@@ -17,13 +17,14 @@ func (SetMarkAtPoint) Aliases() []string {
 	return []string{"set-mark-at-point"}
 }
 
-func (SetMarkAtPoint) Complete(*widgets.Window, []string) []string {
+func (SetMarkAtPoint) Complete(interfaces.Window, []string) []string {
 	return nil
 }
 
-func (cmd SetMarkAtPoint) Execute(w *widgets.Window, args []string) error {
-	w.OpenBuffer.TakeSnapshot(false)
-	w.OpenBuffer.Mark = w.OpenBuffer.Point
+func (cmd SetMarkAtPoint) Execute(w interfaces.Window, args []string) error {
+	buf := w.OpenBuffer()
+	buf.TakeSnapshot(false)
+	buf.SetMark(buf.Point())
 	return nil
 }
 
@@ -31,11 +32,12 @@ func (ClearMark) Aliases() []string {
 	return []string{"clear-mark"}
 }
 
-func (ClearMark) Complete(*widgets.Window, []string) []string {
+func (ClearMark) Complete(interfaces.Window, []string) []string {
 	return nil
 }
 
-func (cmd ClearMark) Execute(w *widgets.Window, args []string) error {
-	w.OpenBuffer.Mark = buffer.Loc{-1, -1}
+func (cmd ClearMark) Execute(w interfaces.Window, args []string) error {
+	buf := w.OpenBuffer()
+	buf.SetMark(linearray.Loc{-1, -1})
 	return nil
 }

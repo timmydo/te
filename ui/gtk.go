@@ -6,11 +6,9 @@ import (
 	"os"
 	"unicode/utf8"
 
-	"github.com/timmydo/te/buffer"
-	"github.com/timmydo/te/commands"
-	"github.com/timmydo/te/input"
+	"github.com/timmydo/te/interfaces"
+	"github.com/timmydo/te/linearray"
 	"github.com/timmydo/te/theme"
-	"github.com/timmydo/te/widgets"
 
 	"github.com/gotk3/gotk3/cairo"
 	"github.com/gotk3/gotk3/gdk"
@@ -21,33 +19,33 @@ func setColor(cr *cairo.Context, c theme.Color) {
 	cr.SetSourceRGBA(c.R, c.G, c.B, c.A)
 }
 
-func drawPanel(win *widgets.Window, cr *cairo.Context, x, y, width, height float64) {
+func drawPanel(win interfaces.Window, cr *cairo.Context, x, y, width, height float64) {
 	// setColor(cr, theme.LeftPanelBackgroundColor)
 	cr.Rectangle(0, 0, width, height)
 	cr.Fill()
 }
 
-func drawBuffer(buf *buffer.Buffer, cr *cairo.Context, x, y, width, height float64) {
+func drawBuffer(buf interfaces.Buffer, cr *cairo.Context, x, y, width, height float64) {
 	cr.SelectFontFace("monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
 	fontSize := 14.0
 	cr.SetFontSize(fontSize)
 	//	log.Printf("drawEditors %v\n", buf)
-	loc := buf.ScrollPosition
-	lines := buf.Data.Contents
+	line := buf.ScrollPosition()
+	topLine := line
+	lines := buf.GetLines()
 	ypos := y + fontSize
-	line := loc.Y
 	lineEnd := lines.End().Y + 1
 
 	lineNumberExtents := cr.TextExtents(fmt.Sprintf(" %d", (line+1)*10))
 	characterExtents := cr.TextExtents("X")
-	point := buf.Point
-	mark := buf.Mark
+	point := buf.Point()
+	mark := buf.Mark()
 
-	setColor(cr, buf.StyleProvider.GetBufferStyle().Background)
+	setColor(cr, buf.Mode().GetBufferStyle().Background)
 	cr.Rectangle(x, y, width, height)
 	cr.Fill()
 
-	setColor(cr, buf.StyleProvider.GetBufferStyle().LineNumberBackground)
+	setColor(cr, buf.Mode().GetBufferStyle().LineNumberBackground)
 	cr.Rectangle(x, y, lineNumberExtents.XAdvance, height)
 	cr.Fill()
 	// log.Printf("character extents: %v\n", characterExtents)
@@ -63,12 +61,12 @@ func drawBuffer(buf *buffer.Buffer, cr *cairo.Context, x, y, width, height float
 
 		// print line number
 		cr.MoveTo(x, ypos)
-		setColor(cr, buf.StyleProvider.GetBufferStyle().LineNumberFont)
+		setColor(cr, buf.Mode().GetBufferStyle().LineNumberFont)
 		cr.ShowText(fmt.Sprintf(" %d", line+1))
 		runesOnLine := utf8.RuneCount(lineBytes)
 
 		// print line background color
-		setColor(cr, buf.StyleProvider.GetLineStyle(line).Background)
+		setColor(cr, buf.Mode().GetLineStyle(line).Background)
 		cr.Rectangle(textStartX, ypos+characterExtents.YBearing, width, runeHeight)
 		cr.Fill()
 
@@ -79,7 +77,7 @@ func drawBuffer(buf *buffer.Buffer, cr *cairo.Context, x, y, width, height float
 				pointXPos = runesOnLine
 			}
 
-			setColor(cr, buf.StyleProvider.GetCharacterStyle(line, pointXPos).Cursor)
+			setColor(cr, buf.Mode().GetCharacterStyle(line, pointXPos).Cursor)
 			cr.Rectangle(textStartX+(float64(pointXPos)*runeWidth),
 				ypos+characterExtents.YBearing,
 				runeWidth,
@@ -95,7 +93,7 @@ func drawBuffer(buf *buffer.Buffer, cr *cairo.Context, x, y, width, height float
 			r, rSize := utf8.DecodeRune(lineBytes[lineByteOffset:])
 			currentCharacter := string(r)
 			lineByteOffset += rSize
-			currentLoc := buffer.Loc{runesPrinted, line}
+			currentLoc := linearray.Loc{runesPrinted, line}
 			inSelection := false
 			// if mark active
 			if mark.Y != -1 {
@@ -112,7 +110,7 @@ func drawBuffer(buf *buffer.Buffer, cr *cairo.Context, x, y, width, height float
 
 			// print selection background
 			if inSelection {
-				setColor(cr, buf.StyleProvider.GetCharacterStyle(line, runesPrinted).Selection)
+				setColor(cr, buf.Mode().GetCharacterStyle(line, runesPrinted).Selection)
 				cr.Rectangle(textStartX+(float64(runesPrinted)*runeWidth),
 					ypos+characterExtents.YBearing,
 					runeWidth,
@@ -122,7 +120,7 @@ func drawBuffer(buf *buffer.Buffer, cr *cairo.Context, x, y, width, height float
 
 			// print character
 			cr.MoveTo(currentX, currentY)
-			setColor(cr, buf.StyleProvider.GetCharacterStyle(line, runesPrinted).Font)
+			setColor(cr, buf.Mode().GetCharacterStyle(line, runesPrinted).Font)
 			cr.ShowText(currentCharacter)
 			currentX += characterExtents.XAdvance
 			currentY += characterExtents.YAdvance
@@ -133,21 +131,21 @@ func drawBuffer(buf *buffer.Buffer, cr *cairo.Context, x, y, width, height float
 
 	}
 
-	buf.LinesInDisplay = line - loc.Y
+	buf.SetLinesInDisplay(line - topLine)
 }
 
-func draw(win *widgets.Window, da *gtk.DrawingArea, cr *cairo.Context) {
+func draw(win interfaces.Window, da *gtk.DrawingArea, cr *cairo.Context) {
 	target := cr.GetTarget()
 	height := float64(target.GetHeight())
 	width := float64(target.GetWidth())
 
 	// log.Printf("draw(%v) size %v x %v\n", win, width, height)
 	if win.OpenBuffer != nil {
-		drawBuffer(win.OpenBuffer, cr, 0, 0, width, height)
+		drawBuffer(win.OpenBuffer(), cr, 0, 0, width, height)
 	}
 }
 
-func keyPressEvent(teW *widgets.Window, win *gtk.Window, ev *gdk.Event) {
+func keyPressEvent(teW interfaces.Window, win *gtk.Window, ev *gdk.Event) {
 	keyEvent := &gdk.EventKey{ev}
 	keyState := gdk.ModifierType(keyEvent.State())
 	item, found := keyMap[keyEvent.KeyVal()]
@@ -157,26 +155,26 @@ func keyPressEvent(teW *widgets.Window, win *gtk.Window, ev *gdk.Event) {
 		item.MetaMod = keyState&gdk.GDK_MOD1_MASK != 0
 		item.SuperMod = keyState&gdk.GDK_SUPER_MASK != 0
 		item.HyperMod = keyState&gdk.GDK_HYPER_MASK != 0
-		cmd := input.FindCommand(item, teW.OpenBuffer.Mode)
-		if cmd != nil {
-
-			err := commands.GlobalCommands.ExecuteCommand(teW, cmd)
-			if err != nil {
-				log.Printf("Error: %v\n", err.Error())
-			}
-			win.QueueDraw()
+		err := teW.OpenBuffer().Mode().ExecuteCommand(teW, item)
+		if err != nil {
+			log.Printf("Error: %v\n", err.Error())
 		}
+
+		win.QueueDraw()
+		// input.FindCommand(item, )
+		// err := commands.GlobalCommands.ExecuteCommand(teW, cmd)
+
 	} else {
 		log.Printf("Key not found %d\n", keyEvent.KeyVal())
 	}
 
 }
 
-func setupWindow(teW *widgets.Window, win *gtk.Window) {
+func setupWindow(teW interfaces.Window, win *gtk.Window) {
 	win.SetTitle("TE")
 	win.Connect("destroy", func() {
-		widgets.ApplicationInstance.KillWindow(teW)
-		if len(widgets.ApplicationInstance.Windows) == 0 {
+		interfaces.GetApplication().KillWindow(teW)
+		if len(interfaces.GetApplication().Windows()) == 0 {
 			gtk.MainQuit()
 		}
 	})
@@ -214,7 +212,9 @@ func Start() {
 	if err != nil {
 		log.Fatal("Unable to get working directory:", err)
 	}
-	teWindow := widgets.ApplicationInstance.CreateWindow("te", cwd)
+	app := interfaces.GetApplication()
+	log.Printf("App: %v\n", app)
+	teWindow := app.CreateWindow("te", cwd)
 	setupWindow(teWindow, win)
 
 	// Begin executing the GTK main loop.  This blocks until

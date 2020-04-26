@@ -1,29 +1,33 @@
 package widgets
 
-import "log"
+import (
+	"log"
 
-var (
-	ApplicationInstance Application
+	"github.com/timmydo/te/interfaces"
 )
 
 func init() {
-	ApplicationInstance = Application{}
+	interfaces.SetApplication(&application{})
 }
 
-type Application struct {
+type application struct {
 	name    string
-	Windows []*Window
+	windows []interfaces.Window
 }
 
-func (app *Application) CreateWindow(name string, rootDirectory string) *Window {
+func (app *application) Windows() []interfaces.Window {
+	return app.windows
+}
+
+func (app *application) CreateWindow(name string, rootDirectory string) interfaces.Window {
 	w := NewWindow(name, rootDirectory)
-	app.Windows = append(app.Windows, w)
+	app.windows = append(app.windows, w)
 	log.Printf("Created window %s\n", name)
 	return w
 }
 
-func (app *Application) FindWindow(handle *Window) *Window {
-	for _, element := range app.Windows {
+func (app *application) FindWindow(handle interfaces.Window) interfaces.Window {
+	for _, element := range app.windows {
 		if element == handle {
 			return element
 		}
@@ -37,12 +41,11 @@ func remove(s []interface{}, i int) []interface{} {
 	return s[:len(s)-1]
 }
 
-func (app *Application) KillWindow(teW *Window) {
-	log.Printf("Destroy window %s\n", teW.name)
-	for i, element := range app.Windows {
+func (app *application) KillWindow(teW interfaces.Window) {
+	for i, element := range app.windows {
 		if element == teW {
-			app.Windows[i] = app.Windows[len(app.Windows)-1]
-			app.Windows = app.Windows[:len(app.Windows)-1]
+			app.windows[i] = app.windows[len(app.windows)-1]
+			app.windows = app.windows[:len(app.windows)-1]
 		}
 	}
 }

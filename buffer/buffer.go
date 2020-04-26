@@ -6,7 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/timmydo/te/theme"
+	"github.com/timmydo/te/interfaces"
+	"github.com/timmydo/te/linearray"
 )
 
 var (
@@ -14,63 +15,102 @@ var (
 )
 
 type Buffer struct {
-	Mode           string
-	Data           *BufferData
-	Point          Loc
-	Mark           Loc
-	ScrollPosition Loc
-	LinesInDisplay int
-	UndoHistory    *ring.Ring
-	RedoHistory    *ring.Ring
-	StyleProvider  BufferStyleProvider
-}
-
-type BufferStyleProvider interface {
-	GetBufferStyle() *theme.BufferThemeStyle
-	GetLineStyle(int) *theme.LineThemeStyle
-	GetCharacterStyle(int, int) *theme.CharacterThemeStyle
-}
-
-type DefaultStyleProvider struct{}
-
-func (this *DefaultStyleProvider) GetBufferStyle() *theme.BufferThemeStyle {
-	return theme.DefaultBufferTheme
-}
-
-func (this *DefaultStyleProvider) GetLineStyle(int) *theme.LineThemeStyle {
-	return theme.DefaultLineTheme
-}
-
-func (this *DefaultStyleProvider) GetCharacterStyle(int, int) *theme.CharacterThemeStyle {
-	return theme.DefaultCharacterTheme
+	mode           interfaces.EditorMode
+	data           *BufferData
+	point          linearray.Loc
+	mark           linearray.Loc
+	scrollPosition linearray.Loc
+	linesInDisplay int
+	undoHistory    *ring.Ring
+	redoHistory    *ring.Ring
 }
 
 type BufferData struct {
-	ModTime    time.Time
+	modTime    time.Time
 	isModified bool
-	Filename   string
-	Contents   *LineArray
+	filename   string
+	contents   *linearray.LineArray
 }
 
-type BufferSnapshot struct {
+type bufferSnapshot struct {
 	timestamp        time.Time
-	contents         *LineArray
+	contents         *linearray.LineArray
 	isModified       bool
-	point            Loc
-	mark             Loc
-	scrollPosition   Loc
-	ModifiesContents bool
+	point            linearray.Loc
+	mark             linearray.Loc
+	scrollPosition   linearray.Loc
+	modifiesContents bool
 }
 
-func (b *Buffer) Snapshot(willChangeContents bool) *BufferSnapshot {
-	snap := &BufferSnapshot{}
+func (b *Buffer) GetLines() *linearray.LineArray {
+	return b.data.contents
+}
+
+func (b *Buffer) LinesInDisplay() int {
+	return b.linesInDisplay
+}
+func (b *Buffer) SetLinesInDisplay(v int) {
+	b.linesInDisplay = v
+}
+
+func (b *Buffer) Mark() linearray.Loc {
+	return b.mark
+}
+func (b *Buffer) Point() linearray.Loc {
+	return b.point
+}
+
+func (b *Buffer) SetMark(l linearray.Loc) {
+	b.mark = l
+}
+
+func (b *Buffer) SetPoint(l linearray.Loc) {
+	b.point = l
+}
+
+func (b *Buffer) Mode() interfaces.EditorMode {
+	return b.mode
+}
+
+func (b *Buffer) ScrollPosition() int {
+	return b.scrollPosition.Y
+}
+
+func (b *Buffer) SetScrollPosition(v int) {
+	b.scrollPosition.Y = v
+}
+
+func (b *Buffer) Undo() {
+	snap, ok := b.undoHistory.Value.(*bufferSnapshot)
+	if ok && snap != nil {
+		b.undoHistory = b.undoHistory.Prev()
+		currentState := b.snapshot(snap.ModifiesBuffer())
+		b.RestoreSnapshot(snap)
+		b.redoHistory = b.redoHistory.Next()
+		b.redoHistory.Value = currentState
+	}
+}
+
+func (b *Buffer) Redo() {
+	snap, ok := b.redoHistory.Value.(*bufferSnapshot)
+	if ok && snap != nil {
+		b.redoHistory = b.redoHistory.Prev()
+		currentState := b.snapshot(snap.ModifiesBuffer())
+		b.RestoreSnapshot(snap)
+		b.undoHistory = b.undoHistory.Next()
+		b.undoHistory.Value = currentState
+	}
+}
+
+func (b *Buffer) snapshot(willChangeContents bool) *bufferSnapshot {
+	snap := &bufferSnapshot{}
 	snap.timestamp = time.Now()
-	snap.isModified = b.Data.isModified
-	snap.point = b.Point
-	snap.mark = b.Mark
-	snap.scrollPosition = b.ScrollPosition
+	snap.isModified = b.data.isModified
+	snap.point = b.point
+	snap.mark = b.mark
+	snap.scrollPosition = b.scrollPosition
 	if willChangeContents {
-		snap.contents = b.Data.Contents.Copy()
+		snap.contents = b.data.contents.Copy()
 	} else {
 		snap.contents = nil
 	}
@@ -80,32 +120,31 @@ func (b *Buffer) Snapshot(willChangeContents bool) *BufferSnapshot {
 
 func (b *Buffer) TakeSnapshot(willChangeContents bool) {
 	// clear the redo history
-	b.RedoHistory = newRing()
-	snap := b.Snapshot(willChangeContents)
+	b.redoHistory = newRing()
+	snap := b.snapshot(willChangeContents)
 	// log.Printf("Snapbuf %v %v\n", snap.timestamp, string(snap.contents.Bytes()))
-	b.UndoHistory = b.UndoHistory.Next()
-	b.UndoHistory.Value = snap
+	b.undoHistory = b.undoHistory.Next()
+	b.undoHistory.Value = snap
 }
 
-func (b *Buffer) RestoreSnapshot(snap *BufferSnapshot) {
-	b.Data.isModified = snap.isModified
-	b.Point = snap.point
-	b.Mark = snap.mark
-	b.ScrollPosition = snap.scrollPosition
+func (b *Buffer) RestoreSnapshot(snap *bufferSnapshot) {
+	b.data.isModified = snap.isModified
+	b.point = snap.point
+	b.mark = snap.mark
+	b.scrollPosition = snap.scrollPosition
 	if snap.contents != nil {
-		b.Data.Contents = snap.contents
+		b.data.contents = snap.contents
 		// log.Printf("Restore %v %v\n", snap.timestamp, string(snap.contents.Bytes()))
 	}
 }
 
-func (snap *BufferSnapshot) ModifiesBuffer() bool {
+func (snap *bufferSnapshot) ModifiesBuffer() bool {
 	return snap.contents != nil
 }
 
-func GetScratchBuffer() *Buffer {
-	if sb := findScratchBuffer(); sb != nil {
-		return sb
-	}
+type myBufferFactory struct{}
+
+func (m myBufferFactory) NewScratchBuffer() interfaces.Buffer {
 
 	sb := newScratchBuffer()
 
@@ -114,23 +153,33 @@ func GetScratchBuffer() *Buffer {
 	return sb
 }
 
-func findScratchBuffer() *Buffer {
-	for _, b := range OpenBuffers {
-		if b.Data.Filename == "*scratch*" {
-			return b
-		}
-	}
+func (m myBufferFactory) NewFindFileBuffer() *Buffer {
 
-	return nil
+	sb := newFindFileBuffer()
+
+	OpenBuffers = append(OpenBuffers, sb)
+	log.Printf("OpenBuffers: %v\n", OpenBuffers)
+	return sb
 }
 
 func newScratchBuffer() *Buffer {
-	la := NewLineArray(100, strings.NewReader("*scratch*\nhello world\nthis is a temp buffer\n"))
+	la := linearray.NewLineArray(100, strings.NewReader("*scratch*\nhello world\nthis is a temp buffer\n"))
 	ub := newRing()
 	rb := newRing()
 	bd := &BufferData{time.Now(), false, "*scratch*", la}
-	b := &Buffer{"edit", bd, Loc{0, 0}, Loc{-1, -1}, Loc{0, 0}, 1, ub, rb, &DefaultStyleProvider{}}
+	m := interfaces.GetMode("edit")
+	b := &Buffer{m, bd, linearray.Loc{0, 0}, linearray.Loc{-1, -1}, linearray.Loc{0, 0}, 1, ub, rb}
 	log.Printf("New scratch buffer: %v", b)
+	return b
+}
+
+func newFindFileBuffer() *Buffer {
+	la := linearray.NewLineArray(100, strings.NewReader("\n"))
+	ub := newRing()
+	rb := newRing()
+	bd := &BufferData{time.Now(), false, "*findfile*", la}
+	m := interfaces.GetMode("findfile")
+	b := &Buffer{m, bd, linearray.Loc{0, 0}, linearray.Loc{-1, -1}, linearray.Loc{0, 0}, 1, ub, rb}
 	return b
 }
 

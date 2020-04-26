@@ -1,28 +1,35 @@
 package buffer
 
-import "log"
+import (
+	"log"
 
-var (
-	GlobalClipboard *Clipboard
+	"github.com/timmydo/te/interfaces"
 )
 
-type Clipboard struct {
+var (
+	globalClipboard *clipboard
+)
+
+func init() {
+	globalClipboard = &clipboard{""}
+}
+
+type clipboard struct {
 	data string
 }
 
-func init() {
-	GlobalClipboard = &Clipboard{""}
+type clipboardProvider struct {
 }
 
-func GetClipboard() *Clipboard {
-	return GlobalClipboard
+func (c clipboardProvider) Get() interfaces.Clipboard {
+	return globalClipboard
 }
 
-func (c *Clipboard) SetData(str string) {
+func (c *clipboard) SetData(str string) {
 	log.Printf("Clipboard: \"%v\"\n", str)
 	c.data = str
 }
 
-func (c *Clipboard) GetData() string {
+func (c *clipboard) GetData() string {
 	return c.data
 }

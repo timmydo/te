@@ -1,4 +1,4 @@
-package buffer
+package linearray
 
 import (
 	"log"
@@ -121,55 +121,55 @@ func (l Loc) MoveLA(n int, buf *LineArray) Loc {
 	return l
 }
 
-func (l Loc) Diff(a, b Loc, buf *Buffer) int {
-	return DiffLA(a, b, buf.Data.Contents)
+func (l Loc) Diff(a, b Loc, lineArray *LineArray) int {
+	return DiffLA(a, b, lineArray)
 }
-func (l Loc) Move(n int, buf *Buffer) Loc {
-	return l.MoveLA(n, buf.Data.Contents)
+func (l Loc) Move(n int, lineArray *LineArray) Loc {
+	return l.MoveLA(n, lineArray)
 }
 
-func (l Loc) MoveDownLines(n int, buf *Buffer) Loc {
-	log.Printf("End: %v\n", buf.Data.Contents.End())
+func (l Loc) MoveDownLines(n int, lineArray *LineArray) Loc {
+	log.Printf("End: %v\n", lineArray.End())
 	if l.Y+n < 0 {
 		return Loc{l.X, 0}
 	}
 
-	if l.Y+n > buf.Data.Contents.End().Y {
-		return Loc{l.X, buf.Data.Contents.End().Y}
+	if l.Y+n > lineArray.End().Y {
+		return Loc{l.X, lineArray.End().Y}
 	}
 
 	return Loc{l.X, l.Y + n}
 }
 
-func (l Loc) MoveInBounds(n int, buf *Buffer) Loc {
-	newPos := l.Move(n, buf)
-	if newPos.GreaterEqual(buf.Data.Contents.End()) {
-		return buf.Data.Contents.End()
+func (l Loc) MoveInBounds(n int, lineArray *LineArray) Loc {
+	newPos := l.Move(n, lineArray)
+	if newPos.GreaterEqual(lineArray.End()) {
+		return lineArray.End()
 	}
 
-	if newPos.LessEqual(buf.Data.Contents.Start()) {
-		return buf.Data.Contents.Start()
+	if newPos.LessEqual(lineArray.Start()) {
+		return lineArray.Start()
 	}
 
 	return newPos
 }
 
-func (l Loc) MoveStartOfLine(buf *Buffer) Loc {
+func (l Loc) MoveStartOfLine(lineArray *LineArray) Loc {
 	return Loc{0, l.Y}
 }
 
-func (l Loc) MoveEndOfLine(buf *Buffer) Loc {
-	return Loc{buf.Data.Contents.RuneCount(l.Y), l.Y}
+func (l Loc) MoveEndOfLine(lineArray *LineArray) Loc {
+	return Loc{lineArray.RuneCount(l.Y), l.Y}
 }
 
 // ByteOffset is just like ToCharPos except it counts bytes instead of runes
-func ByteOffset(pos Loc, buf *Buffer) int {
+func ByteOffset(pos Loc, lineArray *LineArray) int {
 	x, y := pos.X, pos.Y
 	loc := 0
 	for i := 0; i < y; i++ {
 		// + 1 for the newline
-		loc += len(buf.Data.Contents.LineBytes(i)) + 1
+		loc += len(lineArray.LineBytes(i)) + 1
 	}
-	loc += len(buf.Data.Contents.LineBytes(y)[:x])
+	loc += len(lineArray.LineBytes(y)[:x])
 	return loc
 }

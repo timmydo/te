@@ -1,17 +1,25 @@
 package widgets
 
 import (
-	"github.com/timmydo/te/buffer"
+	"github.com/timmydo/te/interfaces"
 )
 
 type Window struct {
 	name          string
 	rootDirectory string
-	OpenBuffer    *buffer.Buffer
-	Clipboard     *buffer.Clipboard
+	openBuffer    interfaces.Buffer
+	clipboard     interfaces.Clipboard
 }
 
-func NewWindow(name string, rootDirectory string) *Window {
-	w := &Window{name, rootDirectory, buffer.GetScratchBuffer(), buffer.GetClipboard()}
+func (w Window) Clipboard() interfaces.Clipboard {
+	return w.clipboard
+}
+
+func (w Window) OpenBuffer() interfaces.Buffer {
+	return w.openBuffer
+}
+
+func NewWindow(name string, rootDirectory string) interfaces.Window {
+	w := &Window{name, rootDirectory, interfaces.GetBufferFactory().NewScratchBuffer(), interfaces.GetClipboardProvider().Get()}
 	return w
 }
