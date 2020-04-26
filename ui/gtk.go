@@ -155,15 +155,12 @@ func keyPressEvent(teW interfaces.Window, win *gtk.Window, ev *gdk.Event) {
 		item.MetaMod = keyState&gdk.GDK_MOD1_MASK != 0
 		item.SuperMod = keyState&gdk.GDK_SUPER_MASK != 0
 		item.HyperMod = keyState&gdk.GDK_HYPER_MASK != 0
-		err := teW.OpenBuffer().Mode().ExecuteCommand(teW, item)
+		err := teW.OpenBuffer().Mode().ExecuteCommand(teW, item.GetName())
 		if err != nil {
 			log.Printf("Error: %v\n", err.Error())
 		}
 
 		win.QueueDraw()
-		// input.FindCommand(item, )
-		// err := commands.GlobalCommands.ExecuteCommand(teW, cmd)
-
 	} else {
 		log.Printf("Key not found %d\n", keyEvent.KeyVal())
 	}

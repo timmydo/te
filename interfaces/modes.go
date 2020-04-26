@@ -1,7 +1,6 @@
 package interfaces
 
 import (
-	"github.com/timmydo/te/input"
 	"github.com/timmydo/te/theme"
 )
 
@@ -11,7 +10,7 @@ type EditorModeFactory interface {
 
 type EditorMode interface {
 	Name() string
-	ExecuteCommand(w Window, key *input.KeyPressInfo) error
+	ExecuteCommand(w Window, key string) error
 	GetBufferStyle() *theme.BufferThemeStyle
 	GetLineStyle(int) *theme.LineThemeStyle
 	GetCharacterStyle(int, int) *theme.CharacterThemeStyle

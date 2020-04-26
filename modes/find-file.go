@@ -1,19 +1,22 @@
 package modes
 
 import (
+	"github.com/timmydo/te/commands"
 	"github.com/timmydo/te/input"
 	"github.com/timmydo/te/interfaces"
 	"github.com/timmydo/te/theme"
 )
 
 type findFileModeFactory struct {
+	bindings map[string]*input.CommandBinding
 }
 
 func (f findFileModeFactory) Create() interfaces.EditorMode {
-	return &findFileMode{}
+	return &findFileMode{f.bindings, -1}
 }
 
 type findFileMode struct {
+	bindings     map[string]*input.CommandBinding
 	selectedLine int
 }
 
@@ -21,7 +24,10 @@ func (m findFileMode) Name() string {
 	return "findfile"
 }
 
-func (m findFileMode) ExecuteCommand(w interfaces.Window, key *input.KeyPressInfo) error {
+func (m findFileMode) ExecuteCommand(w interfaces.Window, key string) error {
+	if b, found := m.bindings[key]; found {
+		return commands.GlobalCommands.ExecuteCommand(w, b.Args)
+	}
 	return nil
 }
 
@@ -51,5 +57,16 @@ func (this *findFileMode) GetCharacterStyle(int, int) *theme.CharacterThemeStyle
 }
 
 func init() {
+	bindings := map[string]*input.CommandBinding{}
+	bindings["up"] = input.MakeBinding("move-point-up-line")
+	bindings["Ctrl-p"] = input.MakeBinding("move-point-up-line")
+	bindings["down"] = input.MakeBinding("move-point-down-line")
+	bindings["Ctrl-n"] = input.MakeBinding("move-point-down-line")
+	bindings["return"] = input.MakeBinding("insert-text", "\n")
+	bindings["pageup"] = input.MakeBinding("scroll-page-up")
+	bindings["pagedown"] = input.MakeBinding("scroll-page-down")
+
+	input.AddInsertCommands(bindings, "insert-text")
+	input.AddSingleLineEditCommands(bindings)
 	interfaces.AddMode("findfile", findFileModeFactory{})
 }
