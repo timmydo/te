@@ -2,8 +2,12 @@ package input
 
 import "log"
 
+type InputCommandSet struct {
+	Commands map[string]*CommandBinding
+}
+
 var (
-	commands map[string]*CommandBinding
+	modeMap map[string]*InputCommandSet
 )
 
 type CommandBinding struct {
@@ -14,8 +18,8 @@ func makeBinding(args []string) *CommandBinding {
 	return &CommandBinding{args}
 }
 
-func init() {
-	commands = map[string]*CommandBinding{}
+func makeEditMode() *InputCommandSet {
+	commands := map[string]*CommandBinding{}
 	commands["left"] = makeBinding([]string{"move-point-left-char"})
 	commands["Ctrl-b"] = makeBinding([]string{"move-point-left-char"})
 	commands["right"] = makeBinding([]string{"move-point-right-char"})
@@ -52,13 +56,25 @@ func init() {
 	for _, key := range "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()=+-_/?\\|\"'<>,.~`[]{}" {
 		commands[string(key)] = makeBinding([]string{"insert-text", string(key)})
 	}
+
+	return &InputCommandSet{commands}
 }
 
-func FindCommand(kp *KeyPressInfo) []string {
+func init() {
+	editMode := makeEditMode()
+	modeMap = map[string]*InputCommandSet{}
+	modeMap["edit"] = editMode
+}
+
+func FindCommand(kp *KeyPressInfo, mode string) []string {
 	kpName := kp.GetName()
-	log.Printf("Key press: %s\n", kpName)
-	if item, found := commands[kpName]; found {
-		return item.Args
+	log.Printf("Mode %s, Key press: %s\n", mode, kpName)
+
+	if mode, modeFound := modeMap[mode]; modeFound {
+		if item, found := mode.Commands[kpName]; found {
+			return item.Args
+		}
 	}
+
 	return nil
 }

@@ -12,6 +12,7 @@ var (
 )
 
 type Buffer struct {
+	Mode           string
 	Data           *BufferData
 	Point          Loc
 	Mark           Loc
@@ -105,7 +106,7 @@ func newScratchBuffer() *Buffer {
 	ub := newRing()
 	rb := newRing()
 	bd := &BufferData{time.Now(), false, "*scratch*", la}
-	b := &Buffer{bd, Loc{0, 0}, Loc{-1, -1}, Loc{0, 0}, 1, ub, rb}
+	b := &Buffer{"edit", bd, Loc{0, 0}, Loc{-1, -1}, Loc{0, 0}, 1, ub, rb}
 	log.Printf("New scratch buffer: %v", b)
 	return b
 }

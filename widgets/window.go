@@ -5,14 +5,13 @@ import (
 )
 
 type Window struct {
-	name                  string
-	rootDirectory         string
-	OpenBuffer            *buffer.Buffer
-	LeftPanelWidthPercent float64
-	Clipboard             *buffer.Clipboard
+	name          string
+	rootDirectory string
+	OpenBuffer    *buffer.Buffer
+	Clipboard     *buffer.Clipboard
 }
 
 func NewWindow(name string, rootDirectory string) *Window {
-	w := &Window{name, rootDirectory, buffer.GetScratchBuffer(), float64(30), buffer.GetClipboard()}
+	w := &Window{name, rootDirectory, buffer.GetScratchBuffer(), buffer.GetClipboard()}
 	return w
 }

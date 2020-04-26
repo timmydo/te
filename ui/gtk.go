@@ -27,121 +27,117 @@ func drawPanel(win *widgets.Window, cr *cairo.Context, x, y, width, height float
 	cr.Fill()
 }
 
-func drawEditors(win *widgets.Window, cr *cairo.Context, x, y, width, height float64) {
+func drawBuffer(buf *buffer.Buffer, cr *cairo.Context, x, y, width, height float64) {
 	cr.SelectFontFace("monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
 	fontSize := 14.0
 	cr.SetFontSize(fontSize)
-	//	log.Printf("drawEditors %v\n", win.OpenBuffer)
-	if win.OpenBuffer != nil {
+	//	log.Printf("drawEditors %v\n", buf)
+	loc := buf.ScrollPosition
+	lines := buf.Data.Contents
+	ypos := y + fontSize
+	line := loc.Y
+	lineEnd := lines.End().Y + 1
 
-		loc := win.OpenBuffer.ScrollPosition
-		lines := win.OpenBuffer.Data.Contents
-		ypos := y + fontSize
-		line := loc.Y
-		lineEnd := lines.End().Y + 1
+	lineNumberExtents := cr.TextExtents(fmt.Sprintf(" %d", (line+1)*10))
+	characterExtents := cr.TextExtents("X")
+	point := buf.Point
+	mark := buf.Mark
 
-		lineNumberExtents := cr.TextExtents(fmt.Sprintf(" %d", (line+1)*10))
-		characterExtents := cr.TextExtents("X")
-		point := win.OpenBuffer.Point
-		mark := win.OpenBuffer.Mark
+	setColor(cr, theme.LineNumberBackgroundColor)
+	cr.Rectangle(x, y, lineNumberExtents.XAdvance, height)
+	cr.Fill()
+	// log.Printf("character extents: %v\n", characterExtents)
+	// log.Printf("fill: %v %v %v %v\n", x, y, x+lineNumberExtents.XAdvance, height)
+	// log.Printf("lne: %v\n", lineNumberExtents)
+	runeWidth := characterExtents.XAdvance
+	runeHeight := fontSize
+	textOffsetFromLineNumberColumn := characterExtents.XBearing
+	textStartX := x + lineNumberExtents.XAdvance + textOffsetFromLineNumberColumn
 
-		setColor(cr, theme.LineNumberBackgroundColor)
-		cr.Rectangle(x, y, lineNumberExtents.XAdvance, height)
-		cr.Fill()
-		// log.Printf("character extents: %v\n", characterExtents)
-		// log.Printf("fill: %v %v %v %v\n", x, y, x+lineNumberExtents.XAdvance, height)
-		// log.Printf("lne: %v\n", lineNumberExtents)
-		runeWidth := characterExtents.XAdvance
-		runeHeight := fontSize
-		textOffsetFromLineNumberColumn := characterExtents.XBearing
-		textStartX := x + lineNumberExtents.XAdvance + textOffsetFromLineNumberColumn
+	for ypos < height && line < lineEnd {
+		lineBytes := lines.LineBytes(line)
 
-		for ypos < height && line < lineEnd {
-			lineBytes := lines.LineBytes(line)
+		// print line number
+		cr.MoveTo(x, ypos)
+		setColor(cr, theme.LineNumberFontColor)
+		cr.ShowText(fmt.Sprintf(" %d", line+1))
+		runesOnLine := utf8.RuneCount(lineBytes)
 
-			// print line number
-			cr.MoveTo(x, ypos)
-			setColor(cr, theme.LineNumberFontColor)
-			cr.ShowText(fmt.Sprintf(" %d", line+1))
-			runesOnLine := utf8.RuneCount(lineBytes)
+		// print cursor
+		if line == point.Y {
+			setColor(cr, theme.CursorColor)
+			pointXPos := point.X
+			if pointXPos > runesOnLine {
+				pointXPos = runesOnLine
+			}
 
-			// print cursor
-			if line == point.Y {
-				setColor(cr, theme.CursorColor)
-				pointXPos := point.X
-				if pointXPos > runesOnLine {
-					pointXPos = runesOnLine
+			// log.Printf("cursor %v %v %v %v\n", textStartX+(float64(pointXPos)*runeWidth), ypos, runeWidth, runeHeight)
+			cr.Rectangle(textStartX+(float64(pointXPos)*runeWidth),
+				ypos+characterExtents.YBearing,
+				runeWidth,
+				runeHeight)
+			cr.Fill()
+			setColor(cr, theme.PrimaryFontColor)
+		}
+
+		lineByteOffset := 0
+		currentX := textStartX
+		currentY := ypos
+		// print text on line
+		for runesPrinted := 0; runesPrinted < runesOnLine; runesPrinted++ {
+			r, rSize := utf8.DecodeRune(lineBytes[lineByteOffset:])
+			currentCharacter := string(r)
+			lineByteOffset += rSize
+			currentLoc := buffer.Loc{runesPrinted, line}
+			inSelection := false
+			// if mark active
+			if mark.Y != -1 {
+				if mark.GreaterEqual(point) {
+					if currentLoc.GreaterThan(point) && currentLoc.LessEqual(mark) {
+						inSelection = true
+					}
+				} else {
+					if currentLoc.GreaterEqual(mark) && currentLoc.LessThan(point) {
+						inSelection = true
+					}
 				}
+			}
 
-				// log.Printf("cursor %v %v %v %v\n", textStartX+(float64(pointXPos)*runeWidth), ypos, runeWidth, runeHeight)
-				cr.Rectangle(textStartX+(float64(pointXPos)*runeWidth),
+			// print selection background
+			if inSelection {
+				setColor(cr, theme.SelectionColor)
+				cr.Rectangle(textStartX+(float64(runesPrinted)*runeWidth),
 					ypos+characterExtents.YBearing,
 					runeWidth,
 					runeHeight)
 				cr.Fill()
-				setColor(cr, theme.PrimaryFontColor)
 			}
 
-			lineByteOffset := 0
-			currentX := textStartX
-			currentY := ypos
-			// print text on line
-			for runesPrinted := 0; runesPrinted < runesOnLine; runesPrinted++ {
-				r, rSize := utf8.DecodeRune(lineBytes[lineByteOffset:])
-				currentCharacter := string(r)
-				lineByteOffset += rSize
-				currentLoc := buffer.Loc{runesPrinted, line}
-				inSelection := false
-				// if mark active
-				if mark.Y != -1 {
-					if mark.GreaterEqual(point) {
-						if currentLoc.GreaterThan(point) && currentLoc.LessEqual(mark) {
-							inSelection = true
-						}
-					} else {
-						if currentLoc.GreaterEqual(mark) && currentLoc.LessThan(point) {
-							inSelection = true
-						}
-					}
-				}
-
-				// print selection background
-				if inSelection {
-					setColor(cr, theme.SelectionColor)
-					cr.Rectangle(textStartX+(float64(runesPrinted)*runeWidth),
-						ypos+characterExtents.YBearing,
-						runeWidth,
-						runeHeight)
-					cr.Fill()
-				}
-
-				// print character
-				cr.MoveTo(currentX, currentY)
-				setColor(cr, theme.PrimaryFontColor)
-				cr.ShowText(currentCharacter)
-				currentX += characterExtents.XAdvance
-				currentY += characterExtents.YAdvance
-			}
-
-			ypos += fontSize
-			line++
-
+			// print character
+			cr.MoveTo(currentX, currentY)
+			setColor(cr, theme.PrimaryFontColor)
+			cr.ShowText(currentCharacter)
+			currentX += characterExtents.XAdvance
+			currentY += characterExtents.YAdvance
 		}
 
-		win.OpenBuffer.LinesInDisplay = line - loc.Y
+		ypos += fontSize
+		line++
+
 	}
+
+	buf.LinesInDisplay = line - loc.Y
 }
 
 func draw(win *widgets.Window, da *gtk.DrawingArea, cr *cairo.Context) {
 	target := cr.GetTarget()
 	height := float64(target.GetHeight())
 	width := float64(target.GetWidth())
-	leftCol := width * win.LeftPanelWidthPercent / 100.0
 
 	// log.Printf("draw(%v) size %v x %v\n", win, width, height)
-
-	drawPanel(win, cr, 0, 0, leftCol, height)
-	drawEditors(win, cr, leftCol, 0, width, height)
+	if win.OpenBuffer != nil {
+		drawBuffer(win.OpenBuffer, cr, 0, 0, width, height)
+	}
 }
 
 func keyPressEvent(teW *widgets.Window, win *gtk.Window, ev *gdk.Event) {
@@ -154,7 +150,7 @@ func keyPressEvent(teW *widgets.Window, win *gtk.Window, ev *gdk.Event) {
 		item.MetaMod = keyState&gdk.GDK_MOD1_MASK != 0
 		item.SuperMod = keyState&gdk.GDK_SUPER_MASK != 0
 		item.HyperMod = keyState&gdk.GDK_HYPER_MASK != 0
-		cmd := input.FindCommand(item)
+		cmd := input.FindCommand(item, teW.OpenBuffer.Mode)
 		if cmd != nil {
 
 			err := commands.GlobalCommands.ExecuteCommand(teW, cmd)
