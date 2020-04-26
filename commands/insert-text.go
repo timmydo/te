@@ -3,8 +3,8 @@ package commands
 import (
 	"errors"
 
-	"github.com/timmydo/te/buffer"
-	"github.com/timmydo/te/widgets"
+	"github.com/timmydo/te/interfaces"
+	"github.com/timmydo/te/linearray"
 )
 
 type InsertText struct {
@@ -18,17 +18,18 @@ func (InsertText) Aliases() []string {
 	return []string{"insert-text"}
 }
 
-func (InsertText) Complete(*widgets.Window, []string) []string {
+func (InsertText) Complete(interfaces.Window, []string) []string {
 	return nil
 }
 
-func (cmd InsertText) Execute(w *widgets.Window, args []string) error {
+func (cmd InsertText) Execute(w interfaces.Window, args []string) error {
+	buf := w.OpenBuffer()
 	if len(args) < 1 {
 		return errors.New("insert-text: Missing arguments")
 	}
-	w.OpenBuffer.TakeSnapshot(true)
-	w.OpenBuffer.Mark = buffer.Loc{-1, -1}
-	newPoint := w.OpenBuffer.Data.Contents.InsertString(w.OpenBuffer.Point, args[0])
-	w.OpenBuffer.Point = newPoint
+	buf.TakeSnapshot(true)
+	buf.SetMark(linearray.Loc{-1, -1})
+	newPoint := buf.GetLines().InsertString(buf.Point(), args[0])
+	buf.SetPoint(newPoint)
 	return nil
 }

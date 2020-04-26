@@ -1,0 +1,4 @@
+package modes
+
+func Initialize() {
+}

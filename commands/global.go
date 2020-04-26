@@ -1,12 +1,14 @@
 package commands
 
+import "github.com/timmydo/te/interfaces"
+
 var (
-	GlobalCommands *Commands
+	GlobalCommands *interfaces.Commands
 )
 
-func register(cmd Command) {
+func register(cmd interfaces.Command) {
 	if GlobalCommands == nil {
-		GlobalCommands = NewCommands()
+		GlobalCommands = interfaces.NewCommands()
 	}
 	GlobalCommands.Register(cmd)
 }

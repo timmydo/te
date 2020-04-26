@@ -1,4 +1,4 @@
-package commands
+package interfaces
 
 import (
 	"errors"
@@ -6,14 +6,12 @@ import (
 	"strings"
 
 	"github.com/google/shlex"
-
-	"github.com/timmydo/te/widgets"
 )
 
 type Command interface {
 	Aliases() []string
-	Execute(*widgets.Window, []string) error
-	Complete(*widgets.Window, []string) []string
+	Execute(Window, []string) error
+	Complete(Window, []string) []string
 }
 
 type Commands map[string]Command
@@ -51,7 +49,7 @@ func (err NoSuchCommand) Error() string {
 	return "Unknown command " + string(err)
 }
 
-func (cmds *Commands) ExecuteCommand(win *widgets.Window, args []string) error {
+func (cmds *Commands) ExecuteCommand(win Window, args []string) error {
 	if len(args) == 0 {
 		return errors.New("Expected a command.")
 	}
@@ -61,7 +59,7 @@ func (cmds *Commands) ExecuteCommand(win *widgets.Window, args []string) error {
 	return NoSuchCommand(args[0])
 }
 
-func (cmds *Commands) GetCompletions(win *widgets.Window, cmd string) []string {
+func (cmds *Commands) GetCompletions(win Window, cmd string) []string {
 	args, err := shlex.Split(cmd)
 	if err != nil {
 		return nil

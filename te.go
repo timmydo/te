@@ -4,7 +4,10 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/timmydo/te/buffer"
+	"github.com/timmydo/te/modes"
 	"github.com/timmydo/te/ui"
+	"github.com/timmydo/te/widgets"
 )
 
 var (
@@ -20,7 +23,9 @@ func printHelp() {
 }
 
 func main() {
-
+	widgets.Initialize()
+	buffer.Initialize()
+	modes.Initialize()
 	flag.Parse()
 	if *flagVersion {
 		fmt.Println("te " + Version)

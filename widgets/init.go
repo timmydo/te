@@ -1,0 +1,4 @@
+package widgets
+
+func Initialize() {
+}
