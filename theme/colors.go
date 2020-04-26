@@ -7,11 +7,34 @@ type Color struct {
 	A float64
 }
 
+type BufferThemeStyle struct {
+	LineNumberFont       Color
+	LineNumberBackground Color
+	Background           Color
+}
+
+type LineThemeStyle struct {
+	Background Color
+}
+
+type CharacterThemeStyle struct {
+	Font      Color
+	Cursor    Color
+	Selection Color
+}
+
 var (
-	LeftPanelBackgroundColor  = Color{0.7, 0.7, 0.7, 1.0}
-	PrimaryFontColor          = Color{0.0, 0.0, 0.0, 1.0}
-	LineNumberFontColor       = Color{0.0, 0.0, 0.0, 1.0}
-	LineNumberBackgroundColor = Color{0.9, 0.9, 0.9, 1.0}
-	CursorColor               = Color{0.9, 0.4, 0.4, 1.0}
-	SelectionColor            = Color{0.9, 0.9, 0.4, 1.0}
+	DefaultBufferTheme = &BufferThemeStyle{
+		LineNumberFont:       Color{0.0, 0.0, 0.0, 1.0},
+		LineNumberBackground: Color{0.9, 0.9, 0.9, 1.0},
+		Background:           Color{1.0, 1.0, 1.0, 1.0},
+	}
+	DefaultLineTheme = &LineThemeStyle{
+		Background: Color{0.95, 0.95, 0.95, 1.0},
+	}
+	DefaultCharacterTheme = &CharacterThemeStyle{
+		Font:      Color{0.0, 0.0, 0.0, 1.0},
+		Cursor:    Color{0.9, 0.4, 0.4, 1.0},
+		Selection: Color{0.9, 0.9, 0.4, 1.0},
+	}
 )

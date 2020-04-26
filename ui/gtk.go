@@ -22,7 +22,7 @@ func setColor(cr *cairo.Context, c theme.Color) {
 }
 
 func drawPanel(win *widgets.Window, cr *cairo.Context, x, y, width, height float64) {
-	setColor(cr, theme.LeftPanelBackgroundColor)
+	// setColor(cr, theme.LeftPanelBackgroundColor)
 	cr.Rectangle(0, 0, width, height)
 	cr.Fill()
 }
@@ -43,7 +43,11 @@ func drawBuffer(buf *buffer.Buffer, cr *cairo.Context, x, y, width, height float
 	point := buf.Point
 	mark := buf.Mark
 
-	setColor(cr, theme.LineNumberBackgroundColor)
+	setColor(cr, buf.StyleProvider.GetBufferStyle().Background)
+	cr.Rectangle(x, y, width, height)
+	cr.Fill()
+
+	setColor(cr, buf.StyleProvider.GetBufferStyle().LineNumberBackground)
 	cr.Rectangle(x, y, lineNumberExtents.XAdvance, height)
 	cr.Fill()
 	// log.Printf("character extents: %v\n", characterExtents)
@@ -59,25 +63,28 @@ func drawBuffer(buf *buffer.Buffer, cr *cairo.Context, x, y, width, height float
 
 		// print line number
 		cr.MoveTo(x, ypos)
-		setColor(cr, theme.LineNumberFontColor)
+		setColor(cr, buf.StyleProvider.GetBufferStyle().LineNumberFont)
 		cr.ShowText(fmt.Sprintf(" %d", line+1))
 		runesOnLine := utf8.RuneCount(lineBytes)
 
+		// print line background color
+		setColor(cr, buf.StyleProvider.GetLineStyle(line).Background)
+		cr.Rectangle(textStartX, ypos+characterExtents.YBearing, width, runeHeight)
+		cr.Fill()
+
 		// print cursor
 		if line == point.Y {
-			setColor(cr, theme.CursorColor)
 			pointXPos := point.X
 			if pointXPos > runesOnLine {
 				pointXPos = runesOnLine
 			}
 
-			// log.Printf("cursor %v %v %v %v\n", textStartX+(float64(pointXPos)*runeWidth), ypos, runeWidth, runeHeight)
+			setColor(cr, buf.StyleProvider.GetCharacterStyle(line, pointXPos).Cursor)
 			cr.Rectangle(textStartX+(float64(pointXPos)*runeWidth),
 				ypos+characterExtents.YBearing,
 				runeWidth,
 				runeHeight)
 			cr.Fill()
-			setColor(cr, theme.PrimaryFontColor)
 		}
 
 		lineByteOffset := 0
@@ -105,7 +112,7 @@ func drawBuffer(buf *buffer.Buffer, cr *cairo.Context, x, y, width, height float
 
 			// print selection background
 			if inSelection {
-				setColor(cr, theme.SelectionColor)
+				setColor(cr, buf.StyleProvider.GetCharacterStyle(line, runesPrinted).Selection)
 				cr.Rectangle(textStartX+(float64(runesPrinted)*runeWidth),
 					ypos+characterExtents.YBearing,
 					runeWidth,
@@ -115,7 +122,7 @@ func drawBuffer(buf *buffer.Buffer, cr *cairo.Context, x, y, width, height float
 
 			// print character
 			cr.MoveTo(currentX, currentY)
-			setColor(cr, theme.PrimaryFontColor)
+			setColor(cr, buf.StyleProvider.GetCharacterStyle(line, runesPrinted).Font)
 			cr.ShowText(currentCharacter)
 			currentX += characterExtents.XAdvance
 			currentY += characterExtents.YAdvance

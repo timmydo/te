@@ -5,6 +5,8 @@ import (
 	"log"
 	"strings"
 	"time"
+
+	"github.com/timmydo/te/theme"
 )
 
 var (
@@ -20,6 +22,27 @@ type Buffer struct {
 	LinesInDisplay int
 	UndoHistory    *ring.Ring
 	RedoHistory    *ring.Ring
+	StyleProvider  BufferStyleProvider
+}
+
+type BufferStyleProvider interface {
+	GetBufferStyle() *theme.BufferThemeStyle
+	GetLineStyle(int) *theme.LineThemeStyle
+	GetCharacterStyle(int, int) *theme.CharacterThemeStyle
+}
+
+type DefaultStyleProvider struct{}
+
+func (this *DefaultStyleProvider) GetBufferStyle() *theme.BufferThemeStyle {
+	return theme.DefaultBufferTheme
+}
+
+func (this *DefaultStyleProvider) GetLineStyle(int) *theme.LineThemeStyle {
+	return theme.DefaultLineTheme
+}
+
+func (this *DefaultStyleProvider) GetCharacterStyle(int, int) *theme.CharacterThemeStyle {
+	return theme.DefaultCharacterTheme
 }
 
 type BufferData struct {
@@ -106,7 +129,7 @@ func newScratchBuffer() *Buffer {
 	ub := newRing()
 	rb := newRing()
 	bd := &BufferData{time.Now(), false, "*scratch*", la}
-	b := &Buffer{"edit", bd, Loc{0, 0}, Loc{-1, -1}, Loc{0, 0}, 1, ub, rb}
+	b := &Buffer{"edit", bd, Loc{0, 0}, Loc{-1, -1}, Loc{0, 0}, 1, ub, rb, &DefaultStyleProvider{}}
 	log.Printf("New scratch buffer: %v", b)
 	return b
 }
