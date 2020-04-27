@@ -1,6 +1,9 @@
 package modes
 
 import (
+	"errors"
+	"log"
+
 	"github.com/timmydo/te/commands"
 	"github.com/timmydo/te/input"
 	"github.com/timmydo/te/interfaces"
@@ -12,7 +15,7 @@ type findFileModeFactory struct {
 }
 
 func (f findFileModeFactory) Create() interfaces.EditorMode {
-	return &findFileMode{f.bindings, -1}
+	return &findFileMode{f.bindings, 0}
 }
 
 type findFileMode struct {
@@ -25,6 +28,9 @@ func (m findFileMode) Name() string {
 }
 
 func (m findFileMode) ExecuteCommand(w interfaces.Window, key string) error {
+	if err, handled := m.handleModeBinding(w, key); handled {
+		return err
+	}
 	if b, found := m.bindings[key]; found {
 		return commands.GlobalCommands.ExecuteCommand(w, b.Args)
 	}
@@ -56,17 +62,45 @@ func (this *findFileMode) GetCharacterStyle(int, int) *theme.CharacterThemeStyle
 	return theme.DefaultCharacterTheme
 }
 
+func (this *findFileMode) handleModeBinding(w interfaces.Window, key string) (error, bool) {
+
+	switch key {
+	case "up":
+	case "Ctrl-p":
+		if this.selectedLine > 0 {
+			this.selectedLine--
+		}
+		return nil, true
+
+	case "down":
+	case "Ctrl-n":
+		if this.selectedLine < w.OpenBuffer().GetLines().End().Y {
+			this.selectedLine++
+		}
+		return nil, true
+
+	case "return":
+		lines := w.OpenBuffer().GetLines()
+		if this.selectedLine >= 0 && this.selectedLine < lines.End().Y {
+			filename := string(lines.LineBytes(this.selectedLine))
+			log.Printf("Filename: %s\n", filename)
+			bf := interfaces.GetBufferFactory()
+			bf.DeleteBuffer(w.OpenBuffer())
+			b, err := bf.CreateBufferFromFile(filename)
+			w.SetOpenBuffer(b)
+			return err, true
+		}
+
+		return errors.New("Could not find file"), true
+	}
+
+	return nil, false
+}
+
 func init() {
 	bindings := map[string]*input.CommandBinding{}
-	bindings["up"] = input.MakeBinding("move-point-up-line")
-	bindings["Ctrl-p"] = input.MakeBinding("move-point-up-line")
-	bindings["down"] = input.MakeBinding("move-point-down-line")
-	bindings["Ctrl-n"] = input.MakeBinding("move-point-down-line")
-	bindings["return"] = input.MakeBinding("insert-text", "\n")
-	bindings["pageup"] = input.MakeBinding("scroll-page-up")
-	bindings["pagedown"] = input.MakeBinding("scroll-page-down")
 
 	input.AddInsertCommands(bindings, "insert-text")
 	input.AddSingleLineEditCommands(bindings)
-	interfaces.AddMode("findfile", findFileModeFactory{})
+	interfaces.AddMode("findfile", findFileModeFactory{bindings})
 }

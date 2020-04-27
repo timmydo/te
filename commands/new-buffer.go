@@ -28,5 +28,6 @@ func (cmd NewBuffer) Execute(w interfaces.Window, args []string) error {
 	modeName := args[0]
 	b := interfaces.GetBufferFactory().CreateBuffer(modeName)
 	w.SetOpenBuffer(b)
+
 	return nil
 }

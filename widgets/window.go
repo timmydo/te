@@ -11,15 +11,15 @@ type Window struct {
 	clipboard     interfaces.Clipboard
 }
 
-func (w Window) Clipboard() interfaces.Clipboard {
+func (w *Window) Clipboard() interfaces.Clipboard {
 	return w.clipboard
 }
 
-func (w Window) OpenBuffer() interfaces.Buffer {
+func (w *Window) OpenBuffer() interfaces.Buffer {
 	return w.openBuffer
 }
 
-func (w Window) SetOpenBuffer(b interfaces.Buffer) {
+func (w *Window) SetOpenBuffer(b interfaces.Buffer) {
 	w.openBuffer = b
 }
 

@@ -134,7 +134,7 @@ func draw(win interfaces.Window, da *gtk.DrawingArea, cr *cairo.Context) {
 	width := float64(target.GetWidth())
 
 	buf := win.OpenBuffer()
-	log.Printf("draw(%v) size %v x %v, buf: %v\n", win, width, height, buf)
+	// log.Printf("draw(%v) size %v x %v, buf: %p\n", win, width, height, buf)
 	if buf != nil {
 		drawBuffer(buf, cr, 0, 0, width, height)
 	}

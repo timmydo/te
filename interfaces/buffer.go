@@ -21,6 +21,8 @@ type Buffer interface {
 type BufferFactory interface {
 	NewScratchBuffer() Buffer
 	CreateBuffer(string) Buffer
+	CreateBufferFromFile(string) (Buffer, error)
+	DeleteBuffer(Buffer)
 }
 
 var bufferFactory BufferFactory

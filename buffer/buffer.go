@@ -3,6 +3,7 @@ package buffer
 import (
 	"container/ring"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -161,6 +162,28 @@ func (m myBufferFactory) CreateBuffer(mode string) interfaces.Buffer {
 	return sb
 }
 
+func (m myBufferFactory) CreateBufferFromFile(filename string) (interfaces.Buffer, error) {
+
+	sb, err := newBufferFromFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	OpenBuffers = append(OpenBuffers, sb)
+	log.Printf("OpenBuffers: %v\n", OpenBuffers)
+	return sb, nil
+}
+
+func (m myBufferFactory) DeleteBuffer(b interfaces.Buffer) {
+	for i, item := range OpenBuffers {
+		if item == b {
+			len := len(OpenBuffers)
+			OpenBuffers[len-1], OpenBuffers[i] = OpenBuffers[i], OpenBuffers[len-1]
+			return
+		}
+	}
+
+}
+
 func newScratchBuffer() *Buffer {
 	la := linearray.NewLineArray(100, strings.NewReader("*scratch*\nhello world\nthis is a temp buffer\n"))
 	ub := newRing()
@@ -180,6 +203,20 @@ func newBuffer(mode string) *Buffer {
 	m := interfaces.GetMode(mode)
 	b := &Buffer{m, bd, linearray.Loc{0, 0}, linearray.Loc{-1, -1}, linearray.Loc{0, 0}, 1, ub, rb}
 	return b
+}
+
+func newBufferFromFile(filename string) (*Buffer, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	la := linearray.NewLineArray(100, file)
+	ub := newRing()
+	rb := newRing()
+	bd := &BufferData{time.Now(), false, "", la}
+	m := interfaces.GetMode("edit")
+	b := &Buffer{m, bd, linearray.Loc{0, 0}, linearray.Loc{-1, -1}, linearray.Loc{0, 0}, 1, ub, rb}
+	return b, nil
 }
 
 func newRing() *ring.Ring {

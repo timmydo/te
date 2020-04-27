@@ -9,10 +9,13 @@ func MakeBinding(args ...string) *CommandBinding {
 }
 
 func AddInsertCommands(commands map[string]*CommandBinding, funcName string) {
-	for _, key := range "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()=+-_/?\\|\"'<>,.~`[]{}" {
+	for _, key := range "abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()=+-_/?\\|\"'<>,.~`[]{}" {
 		commands[string(key)] = MakeBinding(funcName, string(key))
 	}
 
+	for _, key := range "ABCDEFGHIJKLMNOPQRSTUVWXYZ" {
+		commands["Shift-"+string(key)] = MakeBinding(funcName, string(key))
+	}
 }
 
 func AddSingleLineEditCommands(commands map[string]*CommandBinding) {
