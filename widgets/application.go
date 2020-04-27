@@ -6,10 +6,6 @@ import (
 	"github.com/timmydo/te/interfaces"
 )
 
-func init() {
-	interfaces.SetApplication(&application{})
-}
-
 type application struct {
 	name    string
 	windows []interfaces.Window
@@ -20,7 +16,7 @@ func (app *application) Windows() []interfaces.Window {
 }
 
 func (app *application) CreateWindow(name string, rootDirectory string) interfaces.Window {
-	w := NewWindow(name, rootDirectory)
+	w := newWindow(name, rootDirectory)
 	app.windows = append(app.windows, w)
 	log.Printf("Created window %s\n", name)
 	return w

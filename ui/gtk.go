@@ -19,12 +19,6 @@ func setColor(cr *cairo.Context, c theme.Color) {
 	cr.SetSourceRGBA(c.R, c.G, c.B, c.A)
 }
 
-func drawPanel(win interfaces.Window, cr *cairo.Context, x, y, width, height float64) {
-	// setColor(cr, theme.LeftPanelBackgroundColor)
-	cr.Rectangle(0, 0, width, height)
-	cr.Fill()
-}
-
 func drawBuffer(buf interfaces.Buffer, cr *cairo.Context, x, y, width, height float64) {
 	cr.SelectFontFace("monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
 	fontSize := 14.0
@@ -139,9 +133,10 @@ func draw(win interfaces.Window, da *gtk.DrawingArea, cr *cairo.Context) {
 	height := float64(target.GetHeight())
 	width := float64(target.GetWidth())
 
-	// log.Printf("draw(%v) size %v x %v\n", win, width, height)
-	if win.OpenBuffer != nil {
-		drawBuffer(win.OpenBuffer(), cr, 0, 0, width, height)
+	buf := win.OpenBuffer()
+	log.Printf("draw(%v) size %v x %v, buf: %v\n", win, width, height, buf)
+	if buf != nil {
+		drawBuffer(buf, cr, 0, 0, width, height)
 	}
 }
 

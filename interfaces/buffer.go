@@ -20,6 +20,7 @@ type Buffer interface {
 
 type BufferFactory interface {
 	NewScratchBuffer() Buffer
+	CreateBuffer(string) Buffer
 }
 
 var bufferFactory BufferFactory

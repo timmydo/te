@@ -52,6 +52,7 @@ func init() {
 	bindings["return"] = input.MakeBinding("insert-text", "\n")
 	bindings["pageup"] = input.MakeBinding("scroll-page-up")
 	bindings["pagedown"] = input.MakeBinding("scroll-page-down")
+	bindings["Ctrl-o"] = input.MakeBinding("new-buffer", "findfile")
 
 	input.AddInsertCommands(bindings, "insert-text")
 	input.AddSingleLineEditCommands(bindings)

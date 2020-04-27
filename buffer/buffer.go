@@ -153,10 +153,9 @@ func (m myBufferFactory) NewScratchBuffer() interfaces.Buffer {
 	return sb
 }
 
-func (m myBufferFactory) NewFindFileBuffer() *Buffer {
+func (m myBufferFactory) CreateBuffer(mode string) interfaces.Buffer {
 
-	sb := newFindFileBuffer()
-
+	sb := newBuffer(mode)
 	OpenBuffers = append(OpenBuffers, sb)
 	log.Printf("OpenBuffers: %v\n", OpenBuffers)
 	return sb
@@ -173,12 +172,12 @@ func newScratchBuffer() *Buffer {
 	return b
 }
 
-func newFindFileBuffer() *Buffer {
+func newBuffer(mode string) *Buffer {
 	la := linearray.NewLineArray(100, strings.NewReader("\n"))
 	ub := newRing()
 	rb := newRing()
-	bd := &BufferData{time.Now(), false, "*findfile*", la}
-	m := interfaces.GetMode("findfile")
+	bd := &BufferData{time.Now(), false, "", la}
+	m := interfaces.GetMode(mode)
 	b := &Buffer{m, bd, linearray.Loc{0, 0}, linearray.Loc{-1, -1}, linearray.Loc{0, 0}, 1, ub, rb}
 	return b
 }
