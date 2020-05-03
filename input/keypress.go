@@ -1,5 +1,7 @@
 package input
 
+import "strings"
+
 type KeyPressInfo struct {
 	CtrlMod  bool
 	ShiftMod bool
@@ -17,7 +19,7 @@ func NewKeyPressInfo(ch string) *KeyPressInfo {
 }
 
 func (kpi *KeyPressInfo) GetName() string {
-	str := kpi.name
+	str := strings.ToLower(kpi.name)
 	if kpi.HyperMod {
 		str = "Hyper-" + str
 	}

@@ -22,7 +22,7 @@ type BufferFactory interface {
 	NewScratchBuffer() Buffer
 	CreateBuffer(string) Buffer
 	CreateBufferFromFile(string) (Buffer, error)
-	DeleteBuffer(Buffer)
+	DeleteBuffer(Buffer) (bool, Buffer)
 }
 
 var bufferFactory BufferFactory

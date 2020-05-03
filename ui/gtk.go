@@ -150,9 +150,14 @@ func keyPressEvent(teW interfaces.Window, win *gtk.Window, ev *gdk.Event) {
 		item.MetaMod = keyState&gdk.GDK_MOD1_MASK != 0
 		item.SuperMod = keyState&gdk.GDK_SUPER_MASK != 0
 		item.HyperMod = keyState&gdk.GDK_HYPER_MASK != 0
-		err := teW.OpenBuffer().Mode().ExecuteCommand(teW, item.GetName())
-		if err != nil {
-			log.Printf("Error: %v\n", err.Error())
+		openBuffer := teW.OpenBuffer()
+		if openBuffer != nil {
+			err := openBuffer.Mode().ExecuteCommand(teW, item.GetName())
+			if err != nil {
+				log.Printf("Error: %v\n", err.Error())
+			}
+		} else {
+			log.Printf("OpenBuffer is nil!\n")
 		}
 
 		win.QueueDraw()

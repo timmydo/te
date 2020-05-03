@@ -102,5 +102,6 @@ func init() {
 
 	input.AddInsertCommands(bindings, "insert-text")
 	input.AddSingleLineEditCommands(bindings)
+	input.AddBufferCommands(bindings)
 	interfaces.AddMode("findfile", findFileModeFactory{bindings})
 }

@@ -173,15 +173,27 @@ func (m myBufferFactory) CreateBufferFromFile(filename string) (interfaces.Buffe
 	return sb, nil
 }
 
-func (m myBufferFactory) DeleteBuffer(b interfaces.Buffer) {
+func (m myBufferFactory) DeleteBuffer(b interfaces.Buffer) (bool, interfaces.Buffer) {
 	for i, item := range OpenBuffers {
 		if item == b {
 			len := len(OpenBuffers)
-			OpenBuffers[len-1], OpenBuffers[i] = OpenBuffers[i], OpenBuffers[len-1]
-			return
+			if len > 1 {
+				OpenBuffers[len-1], OpenBuffers[i] = OpenBuffers[i], OpenBuffers[len-1]
+				OpenBuffers = OpenBuffers[:len-1]
+				return true, OpenBuffers[0]
+			} else {
+				OpenBuffers = OpenBuffers[:0]
+				return true, nil
+			}
 		}
 	}
 
+	if len(OpenBuffers) > 1 {
+
+		return false, OpenBuffers[0]
+	}
+
+	return false, nil
 }
 
 func newScratchBuffer() *Buffer {

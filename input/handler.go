@@ -18,6 +18,10 @@ func AddInsertCommands(commands map[string]*CommandBinding, funcName string) {
 	}
 }
 
+func AddBufferCommands(commands map[string]*CommandBinding) {
+	commands["Ctrl-Shift-k"] = MakeBinding("kill-buffer")
+}
+
 func AddSingleLineEditCommands(commands map[string]*CommandBinding) {
 	commands["left"] = MakeBinding("move-point-left-char")
 	commands["Ctrl-b"] = MakeBinding("move-point-left-char")

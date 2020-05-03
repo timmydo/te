@@ -5,6 +5,7 @@ import (
 	"github.com/timmydo/te/input"
 	"github.com/timmydo/te/interfaces"
 	"github.com/timmydo/te/theme"
+	"log"
 )
 
 type editModeFactory struct {
@@ -28,6 +29,7 @@ func (m editMode) ExecuteCommand(w interfaces.Window, key string) error {
 		return commands.GlobalCommands.ExecuteCommand(w, b.Args)
 	}
 
+	log.Printf("Not Bound: %s", key)
 	return nil
 }
 
@@ -56,5 +58,6 @@ func init() {
 
 	input.AddInsertCommands(bindings, "insert-text")
 	input.AddSingleLineEditCommands(bindings)
+	input.AddBufferCommands(bindings)
 	interfaces.AddMode("edit", &editModeFactory{bindings})
 }
